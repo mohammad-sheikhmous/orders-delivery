@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\User;
 
 //require_once '/autoload.php';
+use Exception;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Twilio\Rest\Client;
 
@@ -15,16 +16,10 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        try {
-            $user->generateCode();
+        $user->generateCode();
 //        $client = new Client(getenv("TWILIO_SID"),getenv("TWILIO_TOKEN"));
 //        $message = "Login OTP is ".$user->code;
 //        $client->messages->create('+963'.$user->mobile,['from'=>'+44 20766028','body' => $message]);
-        } catch (\Exception $exception) {
-            throw new HttpResponseException(response()->json([
-                'message' => 'something went wrong...!'
-            ],400));
-        }
     }
 
     /**
@@ -40,7 +35,14 @@ class UserObserver
      */
     public function deleted(User $user): void
     {
-        //
+        try {
+            $user->tokens()->delete();
+            $user->profile()->delete();
+        } catch (\Exception $exception) {
+            throw new HttpResponseException(response()->json([
+                'message' => 'something went wrong...!'
+            ], 400));
+        }
     }
 
     /**

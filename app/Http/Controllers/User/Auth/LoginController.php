@@ -1,15 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\User\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Traits\ThrottlesLogins;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -41,23 +38,29 @@ class LoginController extends Controller
         // If the class is using the ThrottlesLogins trait, we can automatically throttle
         // the login attempts for this application. We'll key this by the username and
         // the IP address of the client making these requests into this application.
-        if (method_exists($this, 'hasTooManyLoginAttempts') &&
-            $this->hasTooManyLoginAttempts($request)) {
-            $this->fireLockoutEvent($request);
+        try {
+            if (method_exists($this, 'hasTooManyLoginAttempts') &&
+                $this->hasTooManyLoginAttempts($request)) {
+                $this->fireLockoutEvent($request);
 
-            return $this->sendLockoutResponse($request);
+                return $this->sendLockoutResponse($request);
+            }
+
+            if ($this->attemptLogin($request)) {
+                return $this->sendLoginResponse($request);
+            }
+
+            // If the login attempt was unsuccessful we will increment the number of attempts
+            // to login and redirect the user back to the login form. Of course, when this
+            // user surpasses their maximum number of attempts they will get locked out.
+            $this->incrementLoginAttempts($request);
+
+            return $this->sendFailedLoginResponse($request);
+        } catch (\Exception $exception) {
+            throw new HttpResponseException(response()->json([
+                'message' => 'something went wrong...!'
+            ]));
         }
-
-        if ($this->attemptLogin($request)) {
-            return $this->sendLoginResponse($request);
-        }
-
-        // If the login attempt was unsuccessful we will increment the number of attempts
-        // to login and redirect the user back to the login form. Of course, when this
-        // user surpasses their maximum number of attempts they will get locked out.
-        $this->incrementLoginAttempts($request);
-
-        return $this->sendFailedLoginResponse($request);
     }
 
     /**
@@ -66,7 +69,7 @@ class LoginController extends Controller
     protected function validateLogin(Request $request)
     {
         $request->validate([
-            $this->username() => 'required|string',
+            $this->username() => ['required', 'digits:10', 'starts_with:09'],
             'password' => 'required|string',
         ]);
     }
@@ -76,7 +79,7 @@ class LoginController extends Controller
      */
     protected function attemptLogin(Request $request)
     {
-        return $this->guard()->attempt(
+        return Auth::attempt(
             $this->credentials($request), $request->boolean('remember')
         );
     }
@@ -96,20 +99,20 @@ class LoginController extends Controller
     {
         $this->clearLoginAttempts($request);
 
-        if ($this->guard()->user()->verified !== 1) {
+        if (user()->verified !== 1) {
 
-            $this->guard()->user()->generateCode();
+            user()->generateCode();
             return response()->json([
                 'message' => 'The user has not confirmed his email yet. A verification code has been sent to confirm the mobile number.',
-                'code' => $this->guard()->user()->code,
+                'code' => user()->code,
             ], 401);
         }
 
-        $token = $this->guard()->user()->createToken('myToken', ['user'])->plainTextToken;
+        $token = user()->createToken('myToken', ['user'])->plainTextToken;
 
         return response()->json([
             'message' => 'logged in successfully',
-            'user' => $this->guard()->user(),
+            'user' => user(),
             'token' => $token
         ]);
     }
@@ -137,17 +140,9 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
-        $this->guard()->user()->tokens()->delete();
+        user()->tokens()->delete();
 
         return response()->json(['message' => 'logged out successfully...']);
-    }
-
-    /**
-     * Get the guard to be used during authentication.
-     */
-    protected function guard()
-    {
-        return Auth::guard();
     }
 }
 

@@ -1,27 +1,25 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\User\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Rules\StrongPasswordRule;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Twilio\Rest\Client;
 
 class MobileController extends Controller
 {
     public function verifyMobile(Request $request)
     {
         $request->validate([
-            'mobile' => 'required|exists:users,mobile',
+            'mobile' => 'required',
             'code' => 'required'
         ]);
 
         try {
             $user = User::where('mobile', $request->mobile)->first();
 
-            if (!$user && $user->code !== $request->code && now()->greaterThanOrEqualTo($user->expired_at))
+            if (!$user || $user->code !== $request->code || now()->greaterThanOrEqualTo((string)$user->expired_at))
                 return response()->json(['message' => 'invalid verification code'], 400);
 
             $user->resetCode();

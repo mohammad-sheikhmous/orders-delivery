@@ -20,8 +20,6 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'firstName',
-        'lastName',
         'mobile',
         'password',
     ];
@@ -52,8 +50,8 @@ class User extends Authenticatable
     public function generateCode()
     {
         $this->timestamps = false;
-        $this->code = rand(100, 999).'-'.rand(100,999);
-        $this->expire_at = now()->addMinutes(15);
+        $this->code = rand(100, 999) . '-' . rand(100, 999);
+        $this->code_expire_at = now()->addMinutes(15);
         $this->save();
     }
 
@@ -61,7 +59,7 @@ class User extends Authenticatable
     {
         $this->timestamps = true;
         $this->code = null;
-        $this->expire_at = null;
+        $this->code_expire_at = null;
         $this->verified = 1;
         $this->save();
     }
@@ -70,5 +68,17 @@ class User extends Authenticatable
     protected static function booted(): void
     {
         self::observe(UserObserver::class);
+    }
+
+    public function profile()
+    {
+        return $this->hasOne(Profile::class, 'user_id');
+    }
+
+    public function scopeSelection($query)
+    {
+        return $query->select('mobile')->with(['profile' => function($q){
+            $q->select('firstName','lastName','address','email','longitude','latitude','photo');
+        }]);
     }
 }
