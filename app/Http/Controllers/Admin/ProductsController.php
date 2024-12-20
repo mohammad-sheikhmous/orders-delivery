@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductsController extends Controller
@@ -33,6 +34,17 @@ class ProductsController extends Controller
     public function store(ProductRequest $request)
     {
         try {
+            Product::create([
+                'name'=> 'clothes',
+                'photo'=> 'lllllll',
+                'amount'=> 20,
+                'price'=> 1000,
+                'product_category_id'=> 20,
+            ]);
+
+            return response()->json([
+                'message' => 'new product created...'
+            ]);
 
         } catch (\Exception $exception) {
             return response()->json([

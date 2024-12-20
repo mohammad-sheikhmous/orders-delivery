@@ -25,9 +25,11 @@ class MainCategoriesController extends Controller
             ]);
 
         } catch (\Exception $exception) {
-            throw new HttpResponseException(response()->json([
+            return response()->json([
+                'status' => false,
+                'status code' => 400,
                 'message' => 'something went wrong...!'
-            ], 400));
+            ], 400);
         }
     }
 
@@ -35,6 +37,7 @@ class MainCategoriesController extends Controller
     {
         try {
             $photo = $request->photo;
+
             $photoPath = saveImages('categories', $photo);
 
             MainCategory::create([
@@ -49,9 +52,11 @@ class MainCategoriesController extends Controller
             ], 201);
 
         } catch (\Exception $exception) {
-            throw new HttpResponseException(response()->json([
+            return response()->json([
+                'status' => false,
+                'status code' => 400,
                 'message' => 'something went wrong...!'
-            ], 400));
+            ], 400);
         }
     }
 
@@ -62,6 +67,8 @@ class MainCategoriesController extends Controller
             $category = MainCategory::find($category_id);
             if (!$category)
                 return response()->json([
+                    'status' => false,
+                    'status code' => 400,
                     'message' => 'MainCategory not found...'
                 ]);
 
@@ -70,20 +77,26 @@ class MainCategoriesController extends Controller
             }else {
                 $photoPath = $category->photo;
             }
+
             $category->update([
                 'name' => $request->name,
                 'slug' => $request->slug,
                 'photo' => $photoPath,
                 'active' => $request->active,
             ]);
+
             return response()->json([
+                'status' => true,
+                'status code' => 200,
                 'message' => 'The MainCategory updated successfully...'
             ]);
 
         } catch (\Exception $exception) {
-            throw new HttpResponseException(response()->json([
+            return response()->json([
+                'status' => false,
+                'status code' => 400,
                 'message' => 'something went wrong...!'
-            ], 400));
+            ], 400);
         }
     }
 
@@ -93,12 +106,16 @@ class MainCategoriesController extends Controller
             $category = MainCategory::find(request()->id);
             if (!$category)
                 return response()->json([
+                    'status' => false,
+                    'status code' => 400,
                     'message' => 'MainCategory not found...',
                 ]);
 
             $vendors = $category->vendors();
             if (isset($vendors) && $vendors->count() > 0)
                 return response()->json([
+                    'status' => false,
+                    'status code' => 400,
                     'message' => 'The MainCategory cannot be deleted...',
                 ], 400);
 
@@ -110,9 +127,11 @@ class MainCategoriesController extends Controller
                 'message' => 'The MainCategory deleted successfully...',
             ]);
         } catch (\Exception $exception) {
-            throw new HttpResponseException(response()->json([
+            return response()->json([
+                'status' => false,
+                'status code' => 400,
                 'message' => 'something went wrong...!'
-            ], 400));
+            ], 400);
         }
     }
 }

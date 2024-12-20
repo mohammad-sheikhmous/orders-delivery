@@ -7,6 +7,7 @@ use App\Models\User;
 //require_once '/autoload.php';
 use Exception;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\DB;
 use Twilio\Rest\Client;
 
 class UserObserver
@@ -36,9 +37,12 @@ class UserObserver
     public function deleted(User $user): void
     {
         try {
+
             $user->tokens()->delete();
-            $user->profile()->delete();
+
         } catch (\Exception $exception) {
+            DB::rollBack();
+
             throw new HttpResponseException(response()->json([
                 'message' => 'something went wrong...!'
             ], 400));

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProfileRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -22,11 +24,11 @@ class ProfileController extends Controller
             ]);
 
         } catch (\Exception $exception) {
-            throw new HttpResponseException(response()->json([
+            return response()->json([
                 'status' => false,
                 'status code' => 400,
                 'message' => 'something went wrong...!'
-            ], 400));
+            ], 400);
         }
     }
 
@@ -39,27 +41,47 @@ class ProfileController extends Controller
                 $request->replace('photo', $photoPath);
             }
 
-            user()->profile()->update($request);
+            $profile = user()->profile()->update($request);
 
             return response()->json([
                 'status' => true,
                 'status code' => 200,
                 'message' => 'Profile information updated successfully...',
+                'profile' => $profile,
             ]);
 
         } catch (\Exception $exception) {
-            throw new HttpResponseException(response()->json([
+            return response()->json([
                 'status' => false,
                 'status code' => 400,
                 'message' => 'something went wrong...!'
-            ], 400));
+            ], 400);
         }
     }
 
     public function destroy()
     {
         try {
+            DB::beginTransaction();
+
+            foreach (user()->orders as $order)
+                $order->items()->delete();
+
+            user()->orders()->delete();
+
+            user()->cart->items()->delete();
+
+            user()->cart()->delete();
+
+            $photoPath = user()->profile->photo;
+            if (isset($photoPath))
+                Storage::disk('images')->delete($photoPath);
+
+            user()->profile()->delete();
+
             user()->delete();
+
+            DB::commit();
 
             return response()->json([
                 'status' => true,
@@ -68,11 +90,13 @@ class ProfileController extends Controller
             ]);
 
         } catch (\Exception $exception) {
-            throw new HttpResponseException(response()->json([
+            DB::rollBack();
+
+            return response()->json([
                 'status' => false,
                 'status code' => 400,
                 'message' => 'something went wrong...!'
-            ], 400));
+            ], 400);
         }
     }
 }

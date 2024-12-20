@@ -70,9 +70,11 @@ Route::prefix('user')->group(function () {
 
         Route::post('orders', [OrdersController::class, 'create']);
 
-        Route::put('/orders/{id}', [OrdersController::class, 'update']);
+        Route::put('orders/{id}', [OrdersController::class, 'update']);
 
-        Route::delete('/orders/{id}', [OrdersController::class, 'destroy']);
+        Route::delete('orders/{id}', [OrdersController::class, 'destroy']);
+
+        Route::get('products/store',[ProductsController::class,'store']);
     });
 });
 

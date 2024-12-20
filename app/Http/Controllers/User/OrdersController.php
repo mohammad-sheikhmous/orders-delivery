@@ -80,7 +80,7 @@ class OrdersController extends Controller
 
         } catch (\Exception $exception) {
             DB::rollBack();
-            return $exception;
+
             return response()->json([
                 'status' => false,
                 'status code' => 400,
@@ -92,6 +92,12 @@ class OrdersController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $request->validate([
+                'items' => 'required|array',
+                'items.*.product_id' => 'required|exists:products,id',
+                'items.*.quantity' => 'required|integer|min:1',
+            ]);
+
             $order = Order::where('id', $id)->where('user_id', auth()->id())->first();
 
             if (!$order || $order->status !== 'pending') {
@@ -135,11 +141,12 @@ class OrdersController extends Controller
                 'status' => true,
                 'status code' => 200,
                 'message' => 'Order modified',
-//                'order' => $order
+                'order' => $order->fresh()
             ]);
 
         } catch (\Exception $exception) {
             DB::rollBack();
+
             return response()->json([
                 'status' => false,
                 'status code' => 400,

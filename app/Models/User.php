@@ -75,6 +75,16 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class, 'user_id');
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'user_id');
+    }
+
+    public function cart()
+    {
+        return $this->hasOne(Cart::class, 'user_id');
+    }
+
     public function scopeSelection($query)
     {
         return $query->select('mobile')->with(['profile' => function($q){

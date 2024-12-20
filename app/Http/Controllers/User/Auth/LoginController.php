@@ -57,9 +57,9 @@ class LoginController extends Controller
 
             return $this->sendFailedLoginResponse($request);
         } catch (\Exception $exception) {
-            throw new HttpResponseException(response()->json([
+            return response()->json([
                 'message' => 'something went wrong...!'
-            ]));
+            ],400);
         }
     }
 
@@ -122,9 +122,9 @@ class LoginController extends Controller
      */
     protected function sendFailedLoginResponse(Request $request)
     {
-        throw new HttpResponseException(response()->json([
+        return response()->json([
             $this->username() => [trans('auth.failed')],
-        ], 401));
+        ], 401);
     }
 
     /**
