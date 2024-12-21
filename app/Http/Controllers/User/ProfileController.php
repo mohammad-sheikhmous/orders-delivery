@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProfileRequest;
+use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,9 @@ class ProfileController extends Controller
     public function show()
     {
         try {
-            $profile = user()->selection();
+            $profile = user()->profile;
+            $profile->mobile = user()->mobile;
+//                User::where('id', user()->id)->selection()->get();
 
             return response()->json([
                 'status' => true,
@@ -35,18 +38,39 @@ class ProfileController extends Controller
     public function update(ProfileRequest $request)
     {
         try {
-            //auth()->user()->update($request->only('mobile'));
-            if ($request->photo) {
-                $photoPath = saveImages('users', $request->photo);
-                $request->replace('photo', $photoPath);
+            $profile = user()->profile;
+
+            $oldPhotoPath = $profile->photo;
+
+            if (isset($request->image)) {
+                if (isset($oldPhotoPath))
+                    Storage::disk('images')->delete($oldPhotoPath);
+
+                $photoPath = saveImages('users', $request->image);
+
+                $request->merge(['photo' => $photoPath]);
+            } else {
+                if (isset($oldPhotoPath))
+                    Storage::disk('images')->delete($oldPhotoPath);
+
+                $request->merge(['photo' => null]);
             }
 
-            $profile = user()->profile()->update($request);
+            $updated = user()->profile()->update($request->except('_method', 'image'));
+
+            if ($updated) {
+
+                $profile = $profile->fresh();
+
+                $message = 'Profile information updated successfully...';
+            }
+
+            $profile->mobile = user()->mobile;
 
             return response()->json([
                 'status' => true,
                 'status code' => 200,
-                'message' => 'Profile information updated successfully...',
+                'message' => (isset($message)) ? $message : 'No modifications have been made...',
                 'profile' => $profile,
             ]);
 
@@ -62,26 +86,12 @@ class ProfileController extends Controller
     public function destroy()
     {
         try {
-            DB::beginTransaction();
-
-            foreach (user()->orders as $order)
-                $order->items()->delete();
-
-            user()->orders()->delete();
-
-            user()->cart->items()->delete();
-
-            user()->cart()->delete();
-
             $photoPath = user()->profile->photo;
+
             if (isset($photoPath))
                 Storage::disk('images')->delete($photoPath);
 
-            user()->profile()->delete();
-
             user()->delete();
-
-            DB::commit();
 
             return response()->json([
                 'status' => true,
@@ -90,8 +100,6 @@ class ProfileController extends Controller
             ]);
 
         } catch (\Exception $exception) {
-            DB::rollBack();
-
             return response()->json([
                 'status' => false,
                 'status code' => 400,

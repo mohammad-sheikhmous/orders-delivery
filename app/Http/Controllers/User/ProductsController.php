@@ -17,20 +17,19 @@ class ProductsController extends Controller
     {
         try {
             $products = Product::where('product_category_id', $product_category_id)
-                ->where('active', 0)
+                ->where('active', 1)
                 ->where('amount', '>', 0)
-                ->select('id', 'name', 'photo', 'description', 'amount', 'price', 'product_category_id')
+                ->selectForindexing()
                 ->with(['productCategory' => function ($q) {
                     $q->select('id', 'name');
                 }])->get();
 
-            $products = $products->fresh();
-            if (!$products)
+            if ($products->isEmpty())
                 return response()->json([
                     'status' => false,
-                    'status code' => 204,
+                    'status code' => 400,
                     'message' => 'products not found...!',
-                ], 204);
+                ], 400);
 
             return response()->json([
                 'status' => true,
@@ -48,58 +47,27 @@ class ProductsController extends Controller
         }
     }
 
-    public function store()
-    {
-        try {
-            DB::beginTransaction();
-
-            $main_category = MainCategory::create([
-                'name'=> 'clothes',
-                'photo'=> 'lllllll',
-            ]);
-
-            $vendor = Vendor::create([
-                'name'=> 'clothes',
-                'logo'=> 'lllllll',
-                'password'=> '11111111',
-                'mobile'=> '0936873488',
-                'main_category_id'=> $main_category->id,
-            ]);
-
-            $product_category = ProductCategory::create([
-                'name'=> 'clothes',
-                'photo'=> 'lllllll',
-                'vendor_id'=> $vendor->id,
-            ]);
-
-            Product::create([
-                'name'=> 'clothes',
-                'photo'=> 'lllllll',
-                'amount'=> 20,
-                'price'=> 1000,
-                'product_category_id'=> $product_category->id,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'new product created...'
-            ]);
-
-        } catch (\Exception $exception) {
-            DB::rollBack();
-
-            return response()->json([
-                'status' => false,
-                'status code' => 400,
-                'message' => 'something went wrong...!'
-            ], 400);
-        }
-    }
-
     public function show($id)
     {
         try {
+            $product = Product::selectForShowing()
+                ->with(['productCategory' => function ($q) {
+                    $q->select('id', 'name');
+                }])->find($id);
+
+            if (!isset($product))
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => 'the product not found...!',
+                ], 400);
+
+            return response()->json([
+                'status' => true,
+                'status code' => 200,
+                'message' => 'all products returned..',
+                'products' => $product,
+            ]);
 
         } catch (\Exception $exception) {
             return response()->json([

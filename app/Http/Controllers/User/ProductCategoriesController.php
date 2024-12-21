@@ -12,14 +12,15 @@ class ProductCategoriesController extends Controller
     {
         try {
             $productCategories = ProductCategory::where('vendor_id', $vendor_id)
+                ->where('active', 1)
                 ->select('id', 'name', 'slug', 'photo')->get();
 
-            if (!$productCategories)
+            if ($productCategories->isEmpty())
                 return response()->json([
                     'status' => false,
-                    'status code' => 204,
+                    'status code' => 400,
                     'message' => 'product categories not found...!',
-                ], 204);
+                ], 400);
 
             return response()->json([
                 'status' => true,

@@ -10,87 +10,145 @@ class SearchController extends Controller
 {
     public function searchByVendor(Request $request)
     {
-        if (!isset($request->searchedThing))
-            return response()->json([
-                'status' => false,
-                'status code' => 204,
-                'message' => 'Nothing to search for...!'
-            ]);
-
-        $searchResult = Vendor::where('category_id', $request->category_id)
-            ->where('name', 'like', '%' . $request->searchedThing . '%')
-            ->get();
-
-        if (!$searchResult)
-            return response()->json([
-                'status' => false,
-                'status code' => 204,
-                'message' => 'No results for "' . $request->searchedThing . '". Try a new Search '
-            ]);
-
-        return response()->json([
-            'status' => true,
-            'status code' => 200,
-            'message' => 'Search result...',
-            'result' => $searchResult,
+        //the validation has to be out the try and catch handling
+        $request->validate([
+            'main_category_id' => ['required', 'exists:main_categories,id']
         ]);
+        try {
+            if (!isset($request->search_text))
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => 'Nothing to search for...!'
+                ], 400);
+
+            if (user()->tokenCan('admin'))
+                $searchResult = Vendor::where('main_category_id', $request->main_category_id)
+                    ->where('name', 'like', '%' . $request->search_text . '%')
+                    ->selectionForIndexing()->get();
+            else
+                $searchResult = Vendor::where('main_category_id', $request->main_category_id)
+                    ->where('active', 1)
+                    ->where('name', 'like', '%' . $request->search_text . '%')
+                    ->selectionForIndexing()->get();
+
+            if ($searchResult->isEmpty())
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => "No results for '$request->search_text', Try a new Search "
+                ], 400);
+
+            return response()->json([
+                'status' => true,
+                'status code' => 200,
+                'message' => 'Search result...',
+                'result' => $searchResult,
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'status' => false,
+                'status code' => 400,
+                'message' => 'something went wrong...!',
+            ], 400);
+        }
     }
 
     public function searchByProduct(Request $request)
     {
-        if (!isset($request->searchedThing))
-            return response()->json([
-                'status' => false,
-                'status code' => 204,
-                'message' => 'Nothing to search for...!'
-            ], 204);
-
-        $searchResult = Product::where('product_category_id', $request->product_category_id)
-            ->where('name', 'like', '%' . $request->searchedThing . '%')
-            ->get();
-
-        if (!$searchResult)
-            return response()->json([
-                'status' => false,
-                'status code' => 204,
-                'message' => 'No results for "' . $request->searchedThing . '". Try a new Search '
-            ], 204);
-
-        return response()->json([
-            'status' => true,
-            'status code' => 200,
-            'message' => 'Search result...',
-            'result' => $searchResult,
+        $request->validate([
+            'product_category_id' => ['required', 'exists:product_categories,id']
         ]);
+
+        try {
+            if (!isset($request->search_text))
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => 'Nothing to search for...!'
+                ], 400);
+
+            if (user()->tokenCan('admin'))
+                $searchResult = Product::where('product_category_id', $request->product_category_id)
+                    ->where('name', 'like', '%' . $request->search_text . '%')
+                    ->selectionForIndexing()->get();
+            else
+                $searchResult = Product::where('product_category_id', $request->product_category_id)
+                    ->where('active', 1)
+                    ->where('name', 'like', '%' . $request->search_text . '%')
+                    ->selectionForIndexing()->get();
+
+            if ($searchResult->isEmpty())
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => "No results for '$request->search_text', Try a new Search "
+                ], 400);
+
+            return response()->json([
+                'status' => true,
+                'status code' => 200,
+                'message' => 'Search result...',
+                'result' => $searchResult,
+            ]);
+
+        } catch (\Exception $exception) {
+            return response()->json([
+                'status' => false,
+                'status code' => 400,
+                'message' => 'something went wrong...!',
+            ], 400);
+        }
     }
 
     public function searchInGeneral(Request $request)
     {
-        if (!isset($request->searchedThing))
+        try {
+            if (!isset($request->search_text))
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => 'Nothing to search for...!'
+                ], 400);
+
+            if (user()->tokenCan('admin'))
+                $searchResult1 = Vendor::where('name', 'like', '%' . $request->search_text . '%')
+                    ->selectionForIndexing()->get();
+            else
+                $searchResult1 = Vendor::where('active', 1)
+                    ->where('name', 'like', '%' . $request->search_text . '%')
+                    ->selectionForIndexing()->get();
+
+            if (user()->tokenCan('admin'))
+                $searchResult2 = Product::where('name', 'like', '%' . $request->search_text . '%')
+                    ->selectionForIndexing()->get();
+            else
+                $searchResult2 = Product::where('active', 1)
+                    ->where('name', 'like', '%' . $request->search_text . '%')
+                    ->selectionForIndexing()->get();
+
+            $searchResult = collect($searchResult1)->merge($searchResult2);
+
+            if ($searchResult->isEmpty())
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => "No results for '$request->search_text', Try a new Search "
+                ], 400);
+
             return response()->json([
-                'status' => false,
-                'status code' => 204,
-                'message' => 'Nothing to search for...!'
+                'status' => true,
+                'status code' => 200,
+                'message' => 'Search result...',
+                'result' => $searchResult,
             ]);
 
-        $searchResult1 = Vendor::where('name', 'like', '%' . $request->searchedThing . '%')
-            ->get();
-        $searchResult2 = Product::where('name', 'like', '%' . $request->searchedThing . '%')
-            ->get();
-        $searchResult = collect($searchResult1)->merge($searchResult2);
-
-        if (!$searchResult)
+        } catch (\Exception $exception) {
             return response()->json([
                 'status' => false,
-                'status code' => 204,
-                'message' => 'No results for "' . $request->searchedThing . '". Try a new Search '
-            ]);
-
-        return response()->json([
-            'status' => true,
-            'status code' => 200,
-            'message' => 'Search result...',
-            'result' => $searchResult,
-        ]);
+                'status code' => 400,
+                'message' => 'something went wrong...!',
+            ], 400);
+        }
     }
 }

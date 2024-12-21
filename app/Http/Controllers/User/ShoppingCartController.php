@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ShoppingCartRequest;
 use App\Models\Cart;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class ShoppingCartController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store(ShoppingCartRequest $request)
     {
         try {
             $cart = Cart::firstOrCreate(['user_id' => user()->id]);
@@ -72,6 +73,7 @@ class ShoppingCartController extends Controller
                 'message' => 'Item added to cart',
                 'cart_item' => $cartItem
             ]);
+
         } catch (\Exception $exception) {
             DB::rollBack();
 
@@ -83,7 +85,7 @@ class ShoppingCartController extends Controller
         }
     }
 
-    public function update(Request $request)
+    public function update(ShoppingCartRequest $request)
     {
         try {
             $cart = Cart::where('user_id', user()->id)->first();
@@ -135,6 +137,9 @@ class ShoppingCartController extends Controller
 
     public function removeFromCart(Request $request)
     {
+        $request->validate([
+            'product_id' => 'required|exists:products,id'
+        ]);
         try {
             $cart = Cart::where('user_id', user()->id)->first();
 

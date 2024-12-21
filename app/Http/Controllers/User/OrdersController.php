@@ -18,6 +18,13 @@ class OrdersController extends Controller
                 ->where('user_id', auth()->id())
                 ->get();
 
+            if ($orders->isEmpty())
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => 'orders not found...!',
+                ], 400);
+
             return response()->json([
                 'status' => true,
                 'status code' => 200,
@@ -91,13 +98,13 @@ class OrdersController extends Controller
 
     public function update(Request $request, $id)
     {
-        try {
-            $request->validate([
-                'items' => 'required|array',
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.quantity' => 'required|integer|min:1',
-            ]);
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ]);
 
+        try {
             $order = Order::where('id', $id)->where('user_id', auth()->id())->first();
 
             if (!$order || $order->status !== 'pending') {

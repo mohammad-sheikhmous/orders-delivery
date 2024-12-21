@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ProductRequest extends FormRequest
+class ProductCategoryRequest extends FormRequest
 {
     /**
      * Indicates if the validator should stop on the first rule failure.
@@ -29,13 +29,11 @@ class ProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:30',
+            'name' => 'required|string|max:50',
             'photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
-            'description' => 'nullable|string',
-            'amount' => 'required|integer|min:1',
-            'price' => 'required|numeric:10',
-            'active' => 'required|in:inactive,active',
-            'product_category_id' => 'required|exists:product_categories,id'
+            'slug' => 'string|50',
+            'active' => 'required|in:active,inactive',
+            'vendor_id' => 'required|exists:vendors,id'
         ];
     }
 }

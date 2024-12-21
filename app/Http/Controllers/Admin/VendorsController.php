@@ -9,30 +9,34 @@ use Illuminate\Support\Facades\Storage;
 
 class VendorsController extends Controller
 {
-    public function index($category_id)
+    public function index()
     {
         try {
-            if (auth()->tokenCan('admin'))
-                $vendors = Vendor::selection()->get();
-            else
-                $vendors = Vendor::where('category_id', $category_id)->where('active', 1)
-                    ->select('id', 'name', 'logo')
-                    ->with(['category' => function ($q) {
-                        $q->select('id', 'name');
-                    }])->get();
+//            $vendors = Vendor::selection()->get();
 
-            if (!$vendors)
+            $vendors = Vendor::selectionForIndexing()
+                ->with(['mainCategory' => function ($q) {
+                    $q->select('id', 'name');
+                }])->get();
+
+            if ($vendors->isEmpty())
                 return response()->json([
+                    'status' => false,
+                    'status code' => 400,
                     'message' => 'vendors not found...!',
-                ], 204);
+                ], 400);
 
             return response()->json([
+                'status' => true,
+                'status code' => 200,
                 'message' => 'all vendors returned..',
                 'vendors' => $vendors,
             ]);
 
         } catch (\Exception $exception) {
             return response()->json([
+                'status' => false,
+                'status code' => 400,
                 'message' => 'something went wrong...!'
             ], 400);
         }
@@ -41,86 +45,113 @@ class VendorsController extends Controller
     public function show($id)
     {
         try {
-            $vendor = Vendor::selection()->find($id);
+            $vendor = Vendor::selectionForShowing()->find($id);
+
             if (!$vendor)
                 return response()->json([
+                    'status' => false,
+                    'status code' => 400,
                     'message' => 'the vendor not found...!',
-                ]);
+                ], 400);
 
             return response()->json([
+                'status' => true,
+                'status code' => 200,
                 'message' => 'the vendor returned successfully...',
                 'vendor' => $vendor,
             ]);
 
         } catch (\Exception $exception) {
             return response()->json([
+                'status' => false,
+                'status code' => 400,
                 'message' => 'something went wrong...!'
             ], 400);
         }
     }
 
-    public function store(VendorRequest $request)
+    public function create(VendorRequest $request)
     {
         try {
-            $logo = $request->logo;
-            $logoPath = saveImages('vendors', $logo);
-            $request->replace(['logo' => $logoPath]);
+            $logoPath = saveImages('vendors', $request->logo);
+
+            $request->merge(['logo' => $logoPath]);
 
             Vendor::create($request->all());
 
             return response()->json([
+                'status' => true,
+                'status code' => 201,
                 'message' => 'New Vendor created successfully...'
             ], 201);
 
         } catch (\Exception $exception) {
             return response()->json([
+                'status' => false,
+                'status code' => 400,
                 'message' => 'something went wrong...!'
             ], 400);
         }
     }
 
-    public function update(VendorRequest $request)
+    public function update(VendorRequest $request,$id)
     {
         try {
-            $vendor_id = $request->id;
-            $vendor = Vendor::find($vendor_id);
+            $vendor = Vendor::find($id);
+
             if (!$vendor)
                 return response()->json([
+                    'status' => false,
+                    'status code' => 400,
                     'message' => 'Vendor not found...'
                 ]);
 
             if ($request->logo) {
+                Storage::disk('images')->delete($vendor->logo);
+
                 $logoPath = saveImages('vendors', $request->logo);
             } else {
                 $logoPath = $vendor->logo;
             }
-            $request->replace(['logo' => $logoPath]);
+            $request->merge(['logo' => $logoPath]);
 
-            $vendor->update($request->all());
+            $updated = $vendor->update($request->all());
+
+            $message = ($updated) ? 'The Vendor updated successfully...'
+                : 'No modifications have been made...';
 
             return response()->json([
-                'message' => 'The Vendor updated successfully...'
+                'status' => true,
+                'status code' => 200,
+                'message' => $message
             ]);
 
         } catch (\Exception $exception) {
             return response()->json([
+                'status' => false,
+                'status code' => 400,
                 'message' => 'something went wrong...!'
             ], 400);
         }
     }
 
-    public function destroy()
+    public function destroy($id)
     {
         try {
-            $vendor = Vendor::find(request()->id);
+            $vendor = Vendor::find($id);
+
             if (!$vendor)
                 return response()->json([
-                    'message' => 'Vendor not found...',
-                ]);
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => 'The Vendor not found...',
+                ], 400);
 
-            $products = $vendor->products();
+            $products = $vendor->productCategories();
             if (isset($products) && $products->count() > 0)
                 return response()->json([
+                    'status' => false,
+                    'status code' => 400,
                     'message' => 'The Vendor cannot be deleted...',
                 ], 400);
 
@@ -129,11 +160,15 @@ class VendorsController extends Controller
             $vendor->delete();
 
             return response()->json([
+                'status' => true,
+                'status code' => 200,
                 'message' => 'The Vendor deleted successfully...',
             ]);
 
         } catch (\Exception $exception) {
             return response()->json([
+                'status' => false,
+                'status code' => 400,
                 'message' => 'something went wrong...!'
             ], 400);
         }

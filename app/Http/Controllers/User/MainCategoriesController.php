@@ -14,7 +14,15 @@ class MainCategoriesController extends Controller
     public function index()
     {
         try {
-            $mainCategories = MainCategory::selection()->get();
+            $mainCategories = MainCategory::where('active', 1)->selection()->get();
+
+            if ($mainCategories->isEmpty())
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => 'main categories not found...!',
+                ], 400);
+
             return response()->json([
                 'status' => true,
                 'status code' => 200,

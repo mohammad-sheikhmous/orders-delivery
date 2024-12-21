@@ -10,9 +10,14 @@ class Vendor extends Model
         'mobile', 'name', 'password', 'address', 'longitude', 'latitude', 'email', 'active', 'logo', 'main_category_id'
     ];
 
-    public function scopeSelection($query)
+    public function scopeSelectionForShowing($query)
     {
-        return $query->select('mobile', 'name', 'address', 'longitude', 'latitude', 'email', 'active', 'logo', 'main_category_id');
+        return $query->select('id', 'mobile', 'name', 'address', 'longitude', 'latitude', 'email', 'active', 'logo', 'main_category_id');
+    }
+
+    public function scopeSelectionForIndexing($query)
+    {
+        return $query->select('id', 'name', 'logo', 'main_category_id');
     }
 
     public function mainCategory()
@@ -28,4 +33,17 @@ class Vendor extends Model
     protected $casts = [
         'password' => 'hashed',
     ];
+
+    public function getActiveAttribute($val)
+    {
+        return $val == 1 ? 'active' : 'inactive';
+    }
+
+    public function setActiveAttribute($val)
+    {
+        if ($val == 'active')
+            $this->attributes['active'] = 1;
+        elseif ($val == 'inactive')
+            $this->attributes['active'] = 0;
+    }
 }

@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\User\Auth\LoginController;
 use App\Http\Controllers\User\Auth\MobileController;
 use App\Http\Controllers\User\Auth\RegisterController;
+use App\Http\Controllers\User\FavoriteController;
 use App\Http\Controllers\User\MainCategoriesController;
 use App\Http\Controllers\User\OrdersController;
 use App\Http\Controllers\User\ProductCategoriesController;
@@ -11,6 +13,8 @@ use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\ShoppingCartController;
 use App\Http\Controllers\User\VendorsController;
 use Illuminate\Support\Facades\Route;
+
+require base_path('routes/admin-api.php');
 
 const PAGINATION_COUNT = 5;
 
@@ -74,7 +78,24 @@ Route::prefix('user')->group(function () {
 
         Route::delete('orders/{id}', [OrdersController::class, 'destroy']);
 
-        Route::get('products/store',[ProductsController::class,'store']);
+        Route::get('products/store', [ProductsController::class, 'store']);
+
+        ###########            Search Routes           ##########
+
+        Route::post('vendors/search', [SearchController::class, 'searchByVendor']);
+
+        Route::post('products/search', [SearchController::class, 'searchByProduct']);
+
+        Route::post('search', [SearchController::class, 'searchInGeneral']);
+
+        ###########         Favorites Routes         ###########
+
+        Route::get('favorites',[FavoriteController::class,'show']);
+
+        Route::post('favorites',[FavoriteController::class,'store']);
+
+        Route::delete('favorites',[FavoriteController::class,'delete']);
+
     });
 });
 

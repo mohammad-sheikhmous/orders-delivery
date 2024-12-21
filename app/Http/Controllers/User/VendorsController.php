@@ -12,13 +12,14 @@ class VendorsController extends Controller
     public function index($category_id)
     {
         try {
-            $vendors = Vendor::where('main_category_id', $category_id)->where('active', 0)
-                ->select('id', 'name', 'logo','main_category_id')
+            $vendors = Vendor::where('main_category_id', $category_id)
+                ->where('active', 1)
+                ->selectionForIndexing()
                 ->with(['mainCategory' => function ($q) {
                     $q->select('id', 'name');
                 }])->get();
 
-            if (!isset($vendors))
+            if ($vendors->isEmpty())
                 return response()->json([
                     'status' => false,
                     'status code' => 400,
@@ -41,11 +42,13 @@ class VendorsController extends Controller
         }
     }
 
-    public function show($category_id, $id)
+    public function show($id)
     {
         try {
-            $vendor = Vendor::where('main_category_id', $category_id)->selection()->find($id);
-            if (!isset($vendors))
+            $vendor = Vendor::where('active', 1)
+                ->selectionForShowing()->find($id);
+
+            if (!isset($vendor))
                 return response()->json([
                     'status' => false,
                     'status code' => 400,

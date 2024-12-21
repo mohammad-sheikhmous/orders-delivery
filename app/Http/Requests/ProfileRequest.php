@@ -31,9 +31,9 @@ class ProfileRequest extends FormRequest
         return [
             'firstName' => ['required', 'string', 'min:2', 'max:15'],
             'lastName' => ['required', 'string', 'min:2', 'max:15'],
-            'email' => ['email', 'unique:profiles,email,' . auth()->user()->profile()->id],
-            //'mobile' => ['required', 'digits:10', 'unique:users,mobile,' . auth()->user()->id, 'starts_with:09'],
-            'photo' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'email' => ['email', 'unique:profiles,email,' . auth()->user()->profile->id],
+//            'mobile' => ['required', 'digits:10', 'unique:users,mobile,' . auth()->user()->id, 'starts_with:09'],
+            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'address' => ['string', 'max:150']
         ];
     }

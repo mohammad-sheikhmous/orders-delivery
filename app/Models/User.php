@@ -52,6 +52,7 @@ class User extends Authenticatable
         $this->timestamps = false;
         $this->code = rand(100, 999) . '-' . rand(100, 999);
         $this->code_expire_at = now()->addMinutes(15);
+        $this->verified = 0;
         $this->save();
     }
 
@@ -85,10 +86,15 @@ class User extends Authenticatable
         return $this->hasOne(Cart::class, 'user_id');
     }
 
+    public function favorites()
+    {
+        return $this->belongsToMany(Product::class, 'favorites');
+    }
+
     public function scopeSelection($query)
     {
-        return $query->select('mobile')->with(['profile' => function($q){
-            $q->select('firstName','lastName','address','email','longitude','latitude','photo');
+        return $query->select('id', 'mobile')->with(['profile' => function ($q) {
+            $q->select('id', 'firstName', 'lastName', 'address', 'email', 'longitude', 'latitude', 'photo', 'user_id');
         }]);
     }
 }

@@ -15,6 +15,14 @@ class MainCategory extends Model
         return $val == 1 ? 'active' : 'inactive';
     }
 
+    public function setActiveAttribute($val)
+    {
+        if ($val == 'active')
+            $this->attributes['active'] = 1;
+        elseif ($val == 'inactive')
+            $this->attributes['active'] = 0;
+    }
+
     public function scopeSelection($query)
     {
         return $query->select('id','name', 'slug', 'photo', 'active');

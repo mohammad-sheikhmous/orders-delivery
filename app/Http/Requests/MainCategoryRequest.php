@@ -39,8 +39,8 @@ class MainCategoryRequest extends FormRequest
             //'names' => 'required|array|min:1',
             'name' => 'required|string|max:50',
             'photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
-            'slug' => 'required|string|50',
-            'active' => 'required|in:0,1'
+            'slug' => 'string|50',
+            'active' => 'required|in:inactive,active'
         ];
     }
 }

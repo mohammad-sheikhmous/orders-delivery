@@ -56,10 +56,13 @@ class LoginController extends Controller
             $this->incrementLoginAttempts($request);
 
             return $this->sendFailedLoginResponse($request);
+
         } catch (\Exception $exception) {
             return response()->json([
-                'message' => 'something went wrong...!'
-            ],400);
+                'status' => false,
+                'status code' => 400,
+                'message' => 'something went wrong...!',
+            ], 400);
         }
     }
 

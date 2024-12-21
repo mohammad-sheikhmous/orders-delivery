@@ -14,12 +14,18 @@ class MainCategoriesController extends Controller
     public function index()
     {
         try {
-            if (user()->tokenCan('admin'))
-                $categories = MainCategory::selection()->all();
-            else
-                $categories = MainCategory::where('active', 1)->selection()->all();
+            $categories = MainCategory::selection()->get();
+
+            if ($categories->isEmpty())
+                return response()->json([
+                    'status' => false,
+                    'status code' => 400,
+                    'message' => 'Categories not found...!',
+                ], 400);
 
             return response()->json([
+                'status' => true,
+                'status code' => 200,
                 'message' => 'all categories returned..',
                 'categories' => $categories,
             ]);
@@ -33,12 +39,10 @@ class MainCategoriesController extends Controller
         }
     }
 
-    public function store(MainCategoryRequest $request)
+    public function create(MainCategoryRequest $request)
     {
         try {
-            $photo = $request->photo;
-
-            $photoPath = saveImages('categories', $photo);
+            $photoPath = saveImages('categories', $request->photo);
 
             MainCategory::create([
                 'name' => $request->name,
@@ -48,6 +52,8 @@ class MainCategoriesController extends Controller
             ]);
 
             return response()->json([
+                'status' => true,
+                'status code' => 201,
                 'message' => 'New MainCategory created successfully...'
             ], 201);
 
@@ -60,11 +66,11 @@ class MainCategoriesController extends Controller
         }
     }
 
-    public function update(MainCategoryRequest $request)
+    public function update(MainCategoryRequest $request, $id)
     {
         try {
-            $category_id = $request->id;
-            $category = MainCategory::find($category_id);
+            $category = MainCategory::find($id);
+
             if (!$category)
                 return response()->json([
                     'status' => false,
@@ -72,23 +78,29 @@ class MainCategoriesController extends Controller
                     'message' => 'MainCategory not found...'
                 ]);
 
-            if($request->photo){
+            if ($request->photo) {
+                if (isset($category->photo))
+                    Storage::disk('images')->delete($category->photo);
+
                 $photoPath = saveImages('categories', $request->photo);
-            }else {
+            } else {
                 $photoPath = $category->photo;
             }
 
-            $category->update([
+            $updated = $category->update([
                 'name' => $request->name,
                 'slug' => $request->slug,
                 'photo' => $photoPath,
                 'active' => $request->active,
             ]);
 
+            $message = ($updated) ? 'The MainCategory updated successfully...'
+                : 'No modifications have been made...';
+
             return response()->json([
                 'status' => true,
                 'status code' => 200,
-                'message' => 'The MainCategory updated successfully...'
+                'message' => $message
             ]);
 
         } catch (\Exception $exception) {
@@ -100,10 +112,10 @@ class MainCategoriesController extends Controller
         }
     }
 
-    public function destroy()
+    public function destroy($id)
     {
         try {
-            $category = MainCategory::find(request()->id);
+            $category = MainCategory::find($id);
             if (!$category)
                 return response()->json([
                     'status' => false,
@@ -124,6 +136,8 @@ class MainCategoriesController extends Controller
             $category->delete();
 
             return response()->json([
+                'status' => true,
+                'status code' => 200,
                 'message' => 'The MainCategory deleted successfully...',
             ]);
         } catch (\Exception $exception) {
