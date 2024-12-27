@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Models\Product;
+use Google\Service\BigtableAdmin\DataBoostIsolationReadOnly;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ProductsController extends Controller
@@ -63,12 +65,9 @@ class ProductsController extends Controller
         try {
             $photoPath = saveImages('products', $request->photo);
 
-            $request->merge([
-                'name' => ['en' => $request->name_en, 'ar' => $request->name_ar]
-            ]);
-
             $request = $request->toArray();
             $request['photo'] = $photoPath;
+            $request['name'] = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
 
             Product::create(
                 $request
@@ -104,12 +103,12 @@ class ProductsController extends Controller
             } else {
                 $photoPath = $product->photo;
             }
-            $request->merge([
-                'photo' => $photoPath,
-                'name' => ['en' => $request->name_en, 'ar' => $request->name_ar]
-            ]);
 
-            $updated = $product->update($request->all());
+            $request = $request->toArray();
+            $request['photo'] = $photoPath;
+            $request['name'] = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
+
+            $updated = $product->update($request);
 
             $message = ($updated) ? 'The Product updated successfully...'
                 : 'No modifications have been made...';

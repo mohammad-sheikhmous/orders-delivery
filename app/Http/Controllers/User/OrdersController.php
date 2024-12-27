@@ -60,15 +60,15 @@ class OrdersController extends Controller
             $order = Order::create([
                 'user_id' => auth()->id(),
                 'total_price' => $totalPrice,
-                'status' => 'pending',
+                'status' => ['en'=>'pending','ar'=>'معلق'],
             ]);
 
-            $fcmService = new FcmService();
-            $fcmService->FCM(
-                user()->fcmTokens,[
-                'title'=>'New Order',
-                'message'=>__('messages.new order created...'),
-            ]);
+//            $fcmService = new FcmService();
+//            $fcmService->FCM(
+//                user()->fcmTokens,[
+//                'title'=>'New Order',
+//                'message'=>__('messages.new order created...'),
+//            ]);
 
             foreach ($cart->items as $item) {
                 $order->items()->create([

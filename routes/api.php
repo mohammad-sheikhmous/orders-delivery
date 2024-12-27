@@ -6,6 +6,6 @@ require base_path('routes/admin-api.php');
 
 require base_path('routes/user-api.php');
 
-//const PAGINATION_COUNT = 5;
+const PAGINATION_COUNT = 5;
 
 

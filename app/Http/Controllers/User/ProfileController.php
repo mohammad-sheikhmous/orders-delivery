@@ -39,6 +39,7 @@ class ProfileController extends Controller
 
             $oldPhotoPath = $profile->photo;
 
+            DB::beginTransaction();
             if (isset($request->image)) {
                 if (isset($oldPhotoPath))
                     Storage::disk('images')->delete($oldPhotoPath);
@@ -54,20 +55,21 @@ class ProfileController extends Controller
             }
 
             $updated = user()->profile()->update($request->except('_method', 'image'));
-
+dd(\user()->profile());
             if ($updated) {
 
                 $profile = $profile->fresh();
 
                 $message = __('messages.Profile information updated successfully...');
 
-                $fcmService = new FcmService();
-                $fcmService->FCM(
-                    user()->fcmTokens, [
-                    'title' => 'Profile updated',
-                    'message' => __('messages.Your profile has been modified.'),
-                ]);
+//                $fcmService = new FcmService();
+//                $fcmService->FCM(
+//                    user()->fcmTokens, [
+//                    'title' => 'Profile updated',
+//                    'message' => __('messages.Your profile has been modified.'),
+//                ]);
             }
+            DB::commit();
 
             $profile->mobile = user()->mobile;
 
@@ -79,6 +81,8 @@ class ProfileController extends Controller
             ]);
 
         } catch (\Exception $exception) {
+            DB::rollBack();
+
             return returnExceptionJson();
         }
     }

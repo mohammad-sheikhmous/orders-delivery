@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Services\FcmService;
+use App\Notifications\FcmNotification1;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +15,8 @@ class FavoriteController extends Controller
         try {
             $favorites = DB::table('favorites')->where('user_id', user()->id)
                 ->join('products', 'favorites.product_id', '=', 'products.id')
-                ->select('favorites.id', 'product_id', 'name', 'photo', 'description')->get();
+                ->select('favorites.id', 'product_id', 'name->'.user()->app_lang.' as name',
+                    'photo', 'description->'.user()->app_lang.' as description')->get();
 
             if ($favorites->isEmpty())
                 return response()->json([
@@ -45,7 +47,7 @@ class FavoriteController extends Controller
 
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-        ],$messages);
+        ], $messages);
 
         try {
             $user = user();
@@ -54,27 +56,36 @@ class FavoriteController extends Controller
             if ($user->favorites()->where('product_id', $request->product_id)->exists()) {
                 return response()->json([
                     'status' => false,
-                    'code status' => 400,
+                    'status code' => 400,
                     'message' => __('messages.Product is already in favorites')
                 ], 400);
             }
 
+            DB::beginTransaction();
             $user->favorites()->attach($request->product_id);
 
-            $fcmService = new FcmService();
-            $fcmService->FCM(
-                user()->fcmTokens, [
-                'title' => 'Favorites',
-                'message' => __('messages.Product added to favorites....'),
-            ]);
+//            $user->notify(new FcmNotification1([
+//                'title' => 'New Item in the favorites',
+//                'body' => 'new Item added in the favorites..',
+//                'data' => ['product_id' => $request->product_id]
+//            ]));
+//            $fcmService = new FcmService();
+//            $fcmService->FCM(
+//                user()->fcmTokens, [
+//                'title' => 'Favorites',
+//                'message' => __('messages.Product added to favorites....'),
+//            ]);
+            DB::commit();
 
             return response()->json([
                 'status' => true,
-                'code status' => 200,
+                'status code' => 200,
                 'message' => __('messages.Product added to favorites')
             ]);
 
         } catch (\Exception $exception) {
+            DB::rollBack();
+
             return returnExceptionJson();
         }
     }

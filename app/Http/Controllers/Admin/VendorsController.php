@@ -67,12 +67,9 @@ class VendorsController extends Controller
         try {
             $photoPath = saveImages('vendors', $request->photo);
 
-            $request->merge([
-                'name' => ['en' => $request->name_en, 'ar' => $request->name_ar]
-            ]);
-
             $request = $request->toArray();
             $request['photo'] = $photoPath;
+            $request['name'] = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
 
             Vendor::create($request);
 
@@ -99,16 +96,19 @@ class VendorsController extends Controller
                     'message' => 'Vendor not found...'
                 ]);
 
-            if ($request->logo) {
-                Storage::disk('images')->delete($vendor->logo);
+            if ($request->photo) {
+                Storage::disk('images')->delete($vendor->photo);
 
-                $logoPath = saveImages('vendors', $request->logo);
+                $photoPath = saveImages('vendors', $request->photo);
             } else {
-                $logoPath = $vendor->logo;
+                $photoPath = $vendor->photo;
             }
-            $request->merge(['logo' => $logoPath]);
 
-            $updated = $vendor->update($request->all());
+            $request = $request->toArray();
+            $request['photo'] = $photoPath;
+            $request['name'] = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
+
+            $updated = $vendor->update($request);
 
             $message = ($updated) ? 'The Vendor updated successfully...'
                 : 'No modifications have been made...';
@@ -144,8 +144,8 @@ class VendorsController extends Controller
                     'message' => 'The Vendor cannot be deleted...',
                 ], 400);
 
-            $logoPath = $vendor->logo;
-            Storage::disk('images')->delete($logoPath);
+            $photoPath = $vendor->photo;
+            Storage::disk('images')->delete($photoPath);
             $vendor->delete();
 
             return response()->json([

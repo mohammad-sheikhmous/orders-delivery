@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
-            $table->json('status')->default('pending'); // e.g., pending, completed, canceled
+            $table->json('status'); // e.g., pending, completed, canceled
             $table->decimal('total_price', 10, 2);
             $table->timestamps();
         });
