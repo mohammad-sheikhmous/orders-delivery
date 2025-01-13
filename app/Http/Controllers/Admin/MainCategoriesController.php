@@ -17,18 +17,9 @@ class MainCategoriesController extends Controller
             $categories = MainCategory::selection()->get();
 
             if ($categories->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'Categories not found...!',
-                ], 400);
+                return returnErrorJson('Categories not found...!', 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'all categories returned..',
-                'categories' => $categories,
-            ]);
+            return returnDataJson('categories', $categories, 'all categories returned..');
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -50,11 +41,7 @@ class MainCategoriesController extends Controller
                 'active' => $request->active,
             ]);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 201,
-                'message' => 'New MainCategory created successfully...'
-            ], 201);
+            return returnSuccessJson('New MainCategory created successfully...', 201);
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -67,11 +54,7 @@ class MainCategoriesController extends Controller
             $category = MainCategory::find($id);
 
             if (!$category)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'MainCategory not found...'
-                ]);
+                return returnErrorJson('MainCategory not found...', 400);
 
             if ($request->photo) {
                 if (isset($category->photo))
@@ -95,11 +78,7 @@ class MainCategoriesController extends Controller
             $message = ($updated) ? 'The MainCategory updated successfully...'
                 : 'No modifications have been made...';
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => $message
-            ]);
+            return returnSuccessJson($message);
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -111,29 +90,18 @@ class MainCategoriesController extends Controller
         try {
             $category = MainCategory::find($id);
             if (!$category)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'MainCategory not found...',
-                ]);
+                return returnErrorJson('MainCategory not found...', 400);
 
             $vendors = $category->vendors();
             if (isset($vendors) && $vendors->count() > 0)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'The MainCategory cannot be deleted...',
-                ], 400);
+                return returnErrorJson('The MainCategory cannot be deleted...', 400);
 
             $photoPath = $category->photo;
             Storage::disk('images')->delete($photoPath);
             $category->delete();
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'The MainCategory deleted successfully...',
-            ]);
+            return returnSuccessJson('The MainCategory deleted successfully...', 400);
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
         }
@@ -145,21 +113,13 @@ class MainCategoriesController extends Controller
             $mainCategory = MainCategory::find($id);
 
             if (!$mainCategory)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'The Main Category not found...!',
-                ]);
+                return returnErrorJson('The Main Category not found...!', 400);
 
             $status = $mainCategory->active == 'active' ? 'inactive' : 'active';
 
             $mainCategory->update(['active' => $status]);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => "The Main Category status changed successfully...",
-            ]);
+            return returnSuccessJson('The Main Category status changed successfully...');
 
         } catch (\Exception $ex) {
             return returnExceptionJson();

@@ -15,7 +15,7 @@ trait ThrottlesLogins
     /**
      * Determine if the user has too many failed login attempts.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return bool
      */
     protected function hasTooManyLoginAttempts(Request $request)
@@ -28,7 +28,7 @@ trait ThrottlesLogins
     /**
      * Increment the login attempts for the user.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return void
      */
     protected function incrementLoginAttempts(Request $request)
@@ -41,7 +41,7 @@ trait ThrottlesLogins
     /**
      * Redirect the user after determining they are locked out.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -52,18 +52,20 @@ trait ThrottlesLogins
             $this->throttleKey($request)
         );
 
-        throw new HttpResponseException(response()->json([
+        return response()->json([
+            'status' => false,
+            'status code' => Response::HTTP_TOO_MANY_REQUESTS,
             $this->username() => [trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ])],
-        ],Response::HTTP_TOO_MANY_REQUESTS));
+        ], Response::HTTP_TOO_MANY_REQUESTS);
     }
 
     /**
      * Clear the login locks for the given user credentials.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return void
      */
     protected function clearLoginAttempts(Request $request)
@@ -74,7 +76,7 @@ trait ThrottlesLogins
     /**
      * Fire an event when a lockout occurs.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return void
      */
     protected function fireLockoutEvent(Request $request)
@@ -85,12 +87,12 @@ trait ThrottlesLogins
     /**
      * Get the throttle key for the given request.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return string
      */
     protected function throttleKey(Request $request)
     {
-        return Str::transliterate(Str::lower($request->input($this->username())).'|'.$request->ip());
+        return Str::transliterate(Str::lower($request->input($this->username())) . '|' . $request->ip());
     }
 
     /**

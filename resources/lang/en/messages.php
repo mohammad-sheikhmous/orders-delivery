@@ -22,6 +22,7 @@ return [
     'products not found...!' => 'Products not found...!',
     'all products returned..' => 'All products returned..',
     'the product not found...!' => 'The product not found...!',
+    'the product returned successfully for ID: ' => 'the product returned successfully for ID: ',
     'Profile information returned successfully...' => 'Profile information returned successfully...',
     'Profile information updated successfully...' => 'Profile information updated successfully...',
     'Your profile has been modified .' => 'Your profile has been modified .',
@@ -46,5 +47,13 @@ return [
     ', Try a new Search' => ', Try a new Search',
     'Search result...' => 'Search result...',
     'The App Language switched...' => 'The App Language switched...',
-    'The fcm token field is required.' => 'The fcm token field is required.'
+    'The fcm token field is required.' => 'The fcm token field is required.',
+    'The fcm token field must be string.' => 'The fcm token field must be string.',
+    'you have created new order' => 'you have created new order',
+    'New Order...' => 'New Order...',
+    'Your Order have been updated' => 'Your Order have been updated',
+    'Order Updated...' => 'Order Updated...',
+    'your profile has been updated' => 'your profile has been updated',
+    'Your Profile updated...' => 'Your Profile updated...',
+    'pending' => 'pending',
 ];

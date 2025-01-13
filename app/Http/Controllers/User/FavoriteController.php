@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Http\Services\FcmService;
-use App\Notifications\FcmNotification1;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -15,22 +13,13 @@ class FavoriteController extends Controller
         try {
             $favorites = DB::table('favorites')->where('user_id', user()->id)
                 ->join('products', 'favorites.product_id', '=', 'products.id')
-                ->select('favorites.id', 'product_id', 'name->'.user()->app_lang.' as name',
-                    'photo', 'description->'.user()->app_lang.' as description')->get();
+                ->select('favorites.id', 'product_id', 'name->' . user()->app_lang . ' as name',
+                    'photo', 'description->' . user()->app_lang . ' as description')->get();
 
             if ($favorites->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.Favorites are empty...!')
-                ], 400);
+                return returnErrorJson(__('messages.Favorites are empty...!'), 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.All items in favorites..'),
-                'favorites' => $favorites
-            ]);
+            return returnDataJson('favorites', $favorites, __('messages.All items in favorites..'));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -53,13 +42,8 @@ class FavoriteController extends Controller
             $user = user();
 
             // Check if already in favorites
-            if ($user->favorites()->where('product_id', $request->product_id)->exists()) {
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.Product is already in favorites')
-                ], 400);
-            }
+            if ($user->favorites()->where('product_id', $request->product_id)->exists())
+                return returnErrorJson(__('messages.Product is already in favorites'), 400);
 
             DB::beginTransaction();
             $user->favorites()->attach($request->product_id);
@@ -77,11 +61,7 @@ class FavoriteController extends Controller
 //            ]);
             DB::commit();
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.Product added to favorites')
-            ]);
+            return returnSuccessJson(__('messages.Product added to favorites'));
 
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -100,11 +80,8 @@ class FavoriteController extends Controller
             $user = user();
             $user->favorites()->detach($request->product_id);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.Product removed from favorites')
-            ]);
+            return returnSuccessJson(__('messages.Product removed from favorites'));
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
         }

@@ -20,21 +20,13 @@ class MobileController extends Controller
             $user = User::where('mobile', $request->mobile)->first();
 
             if (!$user || $user->code !== $request->code || now()->greaterThanOrEqualTo((string)$user->expired_at))
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'invalid verification code'
-                ], 400);
+                return returnErrorJson('invalid verification code', 400);
 
             $user->resetCode();
             $token = $user->createToken('myToken', ['user'])->plainTextToken;
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'Mobile number verified successfully',
-                'token' => $token
-            ]);
+            return returnDataJson('token', $token, 'Mobile number verified successfully');
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
         }
@@ -52,12 +44,8 @@ class MobileController extends Controller
 //        $message = "Login OTP is ".$user->code;
 //        $client->messages->create('+963'.$user->mobile,['from'=>'+44 20766028','body' => $message]);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'Reset code sent successfully.',
-                'code' => $user->code,
-            ]);
+            return returnDataJson('code', $user->code, 'Reset code sent successfully.');
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
         }
@@ -82,12 +70,7 @@ class MobileController extends Controller
             $user->resetCode();
 
             $token = $user->createToken('myToken', ['user'])->plainTextToken;
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'Password changed successfully...',
-                'token' => $token
-            ]);
+            return returnDataJson('token', $token, 'Password changed successfully...');
 
         } catch (\Exception $exception) {
             return returnExceptionJson();

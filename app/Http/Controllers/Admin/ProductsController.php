@@ -21,18 +21,10 @@ class ProductsController extends Controller
                 }])->get();
 
             if ($products->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'products not found...!',
-                ], 400);
+                return returnErrorJson('products not found...!', 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'all products returned..',
-                'products' => $products,
-            ]);
+            return returnDataJson('products', $products, 'all products returned..');
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
         }
@@ -44,40 +36,29 @@ class ProductsController extends Controller
             $product = Product::selectionForShowing()->find($id);
 
             if (!$product)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'the product not found...!',
-                ], 400);
+                return returnErrorJson('the product not found...!', 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'the product returned successfully...',
-                'product' => $product->makeVisible(['name', 'description']),
-            ]);
+            return returnDataJson('product', $product->makeVisible(['name', 'description']), 'the product returned successfully...');
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
-        }}
+        }
+    }
 
     public function create(ProductRequest $request)
     {
         try {
             $photoPath = saveImages('products', $request->photo);
 
-            $request = $request->toArray();
-            $request['photo'] = $photoPath;
-            $request['name'] = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
+            $request->merge([
+                'name' => ['en' => $request['name_en'], 'ar' => $request['name_ar']],
+                'description' => ['en' => $request['description_en'], 'ar' => $request['description_ar']],
+                'photo' => $photoPath,
+            ]);
 
-            Product::create(
-                $request
-            );
+            Product::create($request->except('name_ar', 'name_en', 'description_ar', 'description_en'));
 
-            return response()->json([
-                'status' => true,
-                'status code' => 201,
-                'message' => 'New Product created successfully...'
-            ], 201);
+            return returnSuccessJson('New Product created successfully...', 201);
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -90,11 +71,7 @@ class ProductsController extends Controller
             $product = Product::find($id);
 
             if (!$product)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'Product not found...'
-                ]);
+                return returnErrorJson('Product not found...', 400);
 
             if ($request->photo) {
                 Storage::disk('images')->delete($product->photo);
@@ -104,21 +81,20 @@ class ProductsController extends Controller
                 $photoPath = $product->photo;
             }
 
-            $request = $request->toArray();
+            $name = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
+            $request = $request->except('_method', 'name_ar', 'name_en');
             $request['photo'] = $photoPath;
-            $request['name'] = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
+            $request['name'] = $name;
 
             $updated = $product->update($request);
 
             $message = ($updated) ? 'The Product updated successfully...'
                 : 'No modifications have been made...';
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => $message
-            ]);
+            return returnSuccessJson($message);
+
         } catch (\Exception $exception) {
+            return $exception;
             return returnExceptionJson();
         }
     }
@@ -129,11 +105,7 @@ class ProductsController extends Controller
             $product = Product::find($id);
 
             if (!$product)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'The Product not found...',
-                ], 400);
+                return returnErrorJson('The Product not found...', 400);
 
 //            $products = $vendor->products();
 //            if (isset($products) && $products->count() > 0)
@@ -147,11 +119,7 @@ class ProductsController extends Controller
             Storage::disk('images')->delete($photoPath);
             $product->delete();
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'The Product deleted successfully...',
-            ]);
+            return returnSuccessJson('The Product deleted successfully...');
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -164,21 +132,13 @@ class ProductsController extends Controller
             $product = Product::find($id);
 
             if (!$product)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'The Product not found...!',
-                ]);
+                return returnErrorJson('The Product not found...!', 400);
 
             $status = $product->active == 'active' ? 'inactive' : 'active';
 
             $product->update(['active' => $status]);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => "The Product status changed successfully...",
-            ]);
+            return returnSuccessJson('The Product status changed successfully...');
 
         } catch (\Exception $ex) {
             return returnExceptionJson();

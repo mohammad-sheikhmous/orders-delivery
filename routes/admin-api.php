@@ -6,50 +6,61 @@ use App\Http\Controllers\Admin\ProductsController;
 use App\Http\Controllers\Admin\VendorsController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('admin')->group(function (){
+Route::prefix('admin')->group(function () {
 
     ###########         Main Categories Routes       ###########
 
-    Route::get('main_categories', [MainCategoriesController::class, 'index']);
+    Route::controller(MainCategoriesController::class)->group(function () {
 
-    Route::post('main_categories', [MainCategoriesController::class, 'create']);
+        Route::get('main_categories', 'index');
 
-    Route::put('main_categories/{main_category}', [MainCategoriesController::class, 'update']);
+        Route::post('main_categories', 'create');
 
-    Route::delete('main_categories/{main_category}', [MainCategoriesController::class, 'destroy']);
+        Route::put('main_categories/{main_category}', 'update');
+
+        Route::delete('main_categories/{main_category}', 'destroy');
+    });
 
     ###########         Vendors Routes            #############
 
-    Route::get('vendors', [VendorsController::class, 'index']);
+    Route::controller(VendorsController::class)->group(function () {
 
-    Route::get('vendors/{vendor}', [VendorsController::class, 'show']);
+        Route::get('vendors', 'index');
 
-    Route::post('vendors', [VendorsController::class, 'create']);
+        Route::get('vendors/{vendor}', 'show');
 
-    Route::put('vendors/{vendor}', [VendorsController::class, 'update']);
+        Route::post('vendors', 'create');
 
-    Route::delete('vendors/{vendor}', [VendorsController::class, 'destroy']);
+        Route::put('vendors/{vendor}', 'update');
+
+        Route::delete('vendors/{vendor}', 'destroy');
+    });
 
     ############        Product Categories Routes      #############
 
-    Route::get('product_categories', [ProductCategoriesController::class, 'index']);
+    Route::controller(ProductCategoriesController::class)->group(function () {
 
-    Route::post('product_categories', [ProductCategoriesController::class, 'create']);
+        Route::get('product_categories', 'index');
 
-    Route::put('product_categories/{product_category}', [ProductCategoriesController::class, 'update']);
+        Route::post('product_categories', 'create');
 
-    Route::delete('product_categories/{product_category}', [ProductCategoriesController::class, 'destroy']);
+        Route::put('product_categories/{product_category}', 'update');
+
+        Route::delete('product_categories/{product_category}', 'destroy');
+    });
 
     ############        Products Routes             ############
 
-    Route::get('products', [ProductsController::class, 'index']);
+    Route::controller(ProductsController::class)->group(function () {
 
-    Route::get('products/{product}', [ProductsController::class, 'show']);
+        Route::get('products', 'index');
 
-    Route::post('products', [ProductsController::class, 'create']);
+        Route::get('products/{product}', 'show');
 
-    Route::put('products/{product}', [ProductsController::class, 'update']);
+        Route::post('products', 'create');
 
-    Route::delete('products/{product}', [ProductsController::class, 'destroy']);
+        Route::put('products/{product}', 'update');
 
+        Route::delete('products/{product}', 'destroy');
+    });
 });

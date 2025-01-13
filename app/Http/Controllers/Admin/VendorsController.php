@@ -20,18 +20,9 @@ class VendorsController extends Controller
                 }])->get();
 
             if ($vendors->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'vendors not found...!',
-                ], 400);
+                return returnErrorJson('vendors not found...!', 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'all vendors returned..',
-                'vendors' => $vendors,
-            ]);
+            return returnDataJson('vendors', $vendors, 'all vendors returned..');
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -44,18 +35,9 @@ class VendorsController extends Controller
             $vendor = Vendor::selectionForShowing()->find($id);
 
             if (!$vendor)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'the vendor not found...!',
-                ], 400);
+                return returnErrorJson('the vendor not found...!', 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'the vendor returned successfully...',
-                'vendor' => $vendor->makeVisible('name'),
-            ]);
+            return returnDataJson('vendor', $vendor->makeVisible('name'), 'the vendor returned successfully...');
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -67,17 +49,15 @@ class VendorsController extends Controller
         try {
             $photoPath = saveImages('vendors', $request->photo);
 
-            $request = $request->toArray();
-            $request['photo'] = $photoPath;
-            $request['name'] = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
 
-            Vendor::create($request);
+            $request->merge([
+                'name' => ['en' => $request['name_en'], 'ar' => $request['name_ar']],
+                'photo' => $photoPath,
+            ]);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 201,
-                'message' => 'New Vendor created successfully...'
-            ], 201);
+            Vendor::create($request->except('name_ar','name_en','password_confirmation'));
+
+            return returnSuccessJson('New Vendor created successfully...', 201);
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -90,11 +70,7 @@ class VendorsController extends Controller
             $vendor = Vendor::find($id);
 
             if (!$vendor)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'Vendor not found...'
-                ]);
+                return returnErrorJson('Vendor not found...', 400);
 
             if ($request->photo) {
                 Storage::disk('images')->delete($vendor->photo);
@@ -113,11 +89,7 @@ class VendorsController extends Controller
             $message = ($updated) ? 'The Vendor updated successfully...'
                 : 'No modifications have been made...';
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => $message
-            ]);
+            return returnSuccessJson($message);
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -130,29 +102,17 @@ class VendorsController extends Controller
             $vendor = Vendor::find($id);
 
             if (!$vendor)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'The Vendor not found...',
-                ], 400);
+                return returnErrorJson('The Vendor not found...', 400);
 
             $products = $vendor->productCategories();
             if (isset($products) && $products->count() > 0)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'The Vendor cannot be deleted...',
-                ], 400);
+                return returnErrorJson('The Vendor cannot be deleted...', 400);
 
             $photoPath = $vendor->photo;
             Storage::disk('images')->delete($photoPath);
             $vendor->delete();
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => 'The Vendor deleted successfully...',
-            ]);
+            return returnSuccessJson('The Vendor deleted successfully...');
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -165,21 +125,13 @@ class VendorsController extends Controller
             $vendor = Vendor::find($id);
 
             if (!$vendor)
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => 'The Vendor not found...!',
-                ]);
+                return returnErrorJson('The Vendor not found...!', 400);
 
             $status = $vendor->active == 'active' ? 'inactive' : 'active';
 
             $vendor->update(['active' => $status]);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => "The Vendor status changed successfully...",
-            ]);
+            return returnSuccessJson('The Vendor status changed successfully...');
 
         } catch (\Exception $ex) {
             return returnExceptionJson();

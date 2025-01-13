@@ -15,15 +15,8 @@ class ShoppingCartController extends Controller
     {
         try {
             $cart = Cart::with('items.product')->firstOrCreate(['user_id' => user()->id]);
-//                ->where('user_id', user()->id)
-//                ->first();
 
-            return response()->json([
-                'status' => true,
-                'code status' => 200,
-                'message' => __('messages.Shopping Cart'),
-                'cart' => $cart
-            ]);
+            return returnDataJson('cart', $cart, __('messages.Shopping Cart'));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -37,11 +30,7 @@ class ShoppingCartController extends Controller
 
             $product = Product::find($request->product_id);
             if ($request->quantity > $product->amount)
-                return response()->json([
-                    'status' => false,
-                    'code status' => 400,
-                    'message' => __('messages.Item cannot be added to cart'),
-                ]);
+                return returnErrorJson(__('messages.Item cannot be added to cart'), 400);
 
             DB::beginTransaction();
             $product->amount = $product->amount - $request->quantity;
@@ -63,12 +52,7 @@ class ShoppingCartController extends Controller
 //            if no such cart item exists, a new cart item will be created which has the attributes resulting
 //            from merging the first argument array with the second argument array
 
-            return response()->json([
-                'status' => true,
-                'code status' => 200,
-                'message' => __('messages.Item added to cart'),
-                'cart_item' => $cartItem
-            ]);
+            return returnSuccessJson(__('messages.Item added to cart'));
 
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -87,21 +71,13 @@ class ShoppingCartController extends Controller
             $cartItem = $cart->items()->where('product_id', $request->product_id)->first();
 
             if (!isset($cartItem))
-                return response()->json([
-                    'status' => false,
-                    'code status' => 400,
-                    'message' => __('messages.Item cannot be updated...!'),
-                ], 400);
+                return returnErrorJson(__('messages.Item cannot be updated...!'), 400);
 
             DB::beginTransaction();
             $cartItem->product()->increment('amount', $cartItem->quantity);
 
             if ($request->quantity > $cartItem->product->amount)
-                return response()->json([
-                    'status' => false,
-                    'code status' => 400,
-                    'message' => __('messages.Item cannot be updated...!'),
-                ], 400);
+                return returnErrorJson(__('messages.Item cannot be updated...!'), 400);
 
             $updated = $cartItem->update([
                 'quantity' => $request->quantity
@@ -113,12 +89,7 @@ class ShoppingCartController extends Controller
             $message = ($updated) ? __('messages.The Item updated successfully...')
                 : __('messages.No modifications have been made...');
 
-            return response()->json([
-                'status' => true,
-                'code status' => 200,
-                'message' => $message,
-                'cart_item' => $cartItem
-            ]);
+            return returnSuccessJson($message);
 
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -135,23 +106,13 @@ class ShoppingCartController extends Controller
         try {
             $cart = Cart::where('user_id', user()->id)->first();
 
-            if (!$cart) {
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.Cart Item cannot deleted...!')
-                ], 400);
-            }
+            if (!$cart)
+                return returnErrorJson(__('messages.Cart Item cannot deleted...!'), 400);
 
             $cartItem = $cart->items()->where('product_id', $request->product_id)->first();
 
-            if (!$cartItem) {
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.Cart Item cannot deleted...!')
-                ], 400);
-            }
+            if (!$cartItem)
+                return returnErrorJson(__('messages.Cart Item cannot deleted...!'), 400);
 
             DB::beginTransaction();
 
@@ -161,11 +122,7 @@ class ShoppingCartController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.Item removed from cart')
-            ]);
+            return returnSuccessJson(__('messages.Item removed from cart'));
 
         } catch (\Exception $exception) {
             DB::rollBack();

@@ -13,6 +13,7 @@
         "google/apiclient": "^2.18",
         "google/auth": "*",
         "kreait/firebase-php": "*",
+        "kreait/laravel-firebase": "^5.10",
         "laravel-notification-channels/fcm": "^4.5",
         "laravel/framework": "^11.31",
         "laravel/sanctum": "^4.0",

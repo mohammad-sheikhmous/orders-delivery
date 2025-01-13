@@ -19,11 +19,8 @@ class SwitchLangController extends Controller
 
             app()->setLocale($status);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.The App Language switched...')
-            ]);
+            return returnSuccessJson(__('messages.The App Language switched...'));
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
         }

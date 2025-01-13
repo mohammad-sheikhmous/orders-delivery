@@ -33,18 +33,9 @@ class ProductsController extends Controller
 //            'products.*'
 
             if ($products->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.products not found...!'),
-                ], 400);
+                return returnErrorJson(__('messages.products not found...!'), 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.all products returned..'),
-                'products' => $products,
-            ]);
+            return returnDataJson('products', $products, __('messages.all products returned..'));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -60,22 +51,13 @@ class ProductsController extends Controller
                 ->find($id);
 
             if (!isset($product))
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.the product not found...!'),
-                ], 400);
+                return returnErrorJson(__('messages.the product not found...!'), 400);
 
             $product->productCategory = $product->productCategory()->value('name');
             $product->vendor = $product->productCategory()->getRelation('vendor')->value('name');
             $product->mainCategory = $product->productCategory()->getRelation('vendor')->getRelation('mainCategory')->value('name');
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.all products returned..'),
-                'products' => $product,
-            ]);
+            return returnDataJson('products', $product, __('messages.the product returned successfully for ID: '));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();

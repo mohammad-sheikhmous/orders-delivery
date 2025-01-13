@@ -1,10 +1,9 @@
 <?php
 
 
-namespace App\Http\Services;
+namespace App\Services;
 
 use GuzzleHttp\Client;
-use NotificationChannels\Fcm\FcmMessage;
 
 class FcmService
 {

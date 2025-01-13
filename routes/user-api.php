@@ -23,11 +23,14 @@ Route::prefix('user')->group(function () {
 
     Route::post('register', [RegisterController::class, 'register']);
 
-    Route::post('verify-mobile', [MobileController::class, 'verifyMobile']);
+    Route::controller(MobileController::class)->group(function () {
 
-    Route::post('password/send-reset-code', [MobileController::class, 'sendResetCode']);
+        Route::post('verify-mobile', 'verifyMobile')->middleware(['throttle:auth']);//->middleware(['throttle:5,1']);
 
-    Route::post('password/reset-password', [MobileController::class, 'resetPassword']);
+        Route::post('password/send-reset-code', 'sendResetCode');
+
+        Route::post('password/reset-password', 'resetPassword')->middleware(['throttle:auth']);
+    });
 
     #############       Authenticated User Routes       ############
 
@@ -37,11 +40,14 @@ Route::prefix('user')->group(function () {
 
         ######          Profile Routes      ######
 
-        Route::get('profile/show', [ProfileController::class, 'show']);
+        Route::controller(ProfileController::class)->group(function () {
 
-        Route::put('profile/update', [ProfileController::class, 'update']);
+            Route::get('profile/show', 'show');
 
-        Route::delete('profile/delete', [ProfileController::class, 'destroy']);
+            Route::put('profile/update', 'update');
+
+            Route::delete('profile/delete', 'destroy');
+        });
 
         ######          Categories and Vendors Routes       ######
 
@@ -59,46 +65,55 @@ Route::prefix('user')->group(function () {
 
         ######          Shopping Cart Routes        ######
 
-        Route::get('cart', [ShoppingCartController::class, 'show']);
+        Route::controller(ShoppingCartController::class)->group(function () {
 
-        Route::post('cart', [ShoppingCartController::class, 'store']);
+            Route::get('cart', 'show');
 
-        Route::put('cart', [ShoppingCartController::class, 'update']);
+            Route::post('cart', 'store');
 
-        Route::delete('cart', [ShoppingCartController::class, 'removeFromCart']);
+            Route::put('cart', 'update');
+
+            Route::delete('cart', 'removeFromCart');
+        });
 
         ######              Orders Routes             ######
 
-        Route::get('orders', [OrdersController::class, 'index']);
+        Route::controller(OrdersController::class)->group(function () {
 
-        Route::post('orders', [OrdersController::class, 'create']);
+            Route::get('orders', 'index');
 
-        Route::put('orders/{id}', [OrdersController::class, 'update']);
+            Route::post('orders', 'create');
 
-        Route::delete('orders/{id}', [OrdersController::class, 'destroy']);
+            Route::put('orders/{id}', 'update');
 
-        Route::get('products/store', [ProductsController::class, 'store']);
+            Route::delete('orders/{id}', 'destroy');
+        });
 
         ###########            Search Routes           ##########
 
-        Route::post('vendors/search', [SearchController::class, 'searchByVendor']);
+        Route::controller(SearchController::class)->group(function () {
 
-        Route::post('products/search', [SearchController::class, 'searchByProduct']);
+            Route::post('vendors/search', 'searchByVendor');
 
-        Route::post('search', [SearchController::class, 'searchInGeneral']);
+            Route::post('products/search', 'searchByProduct');
+
+            Route::post('search', 'searchInGeneral');
+        });
 
         ###########         Favorites Routes         ###########
 
-        Route::get('favorites', [FavoriteController::class, 'show']);
+        Route::controller(FavoriteController::class)->group(function () {
 
-        Route::post('favorites', [FavoriteController::class, 'store']);
+            Route::get('favorites', 'show');
 
-        Route::delete('favorites', [FavoriteController::class, 'delete']);
+            Route::post('favorites', 'store');
+
+            Route::delete('favorites', 'delete');
+        });
 
         Route::get('switch_lang', \App\Http\Controllers\SwitchLangController::class);
 
         Route::post('fcm_tokens', \App\Http\Controllers\FcmTokensController::class);
-
     });
 });
 

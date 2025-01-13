@@ -16,11 +16,7 @@ class SearchController extends Controller
         ]);
         try {
             if (!isset($request->search_text))
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.Nothing to search for...!')
-                ], 400);
+                return returnErrorJson(__('messages.Nothing to search for...!'), 400);
 
             if (user()->tokenCan('admin'))
                 $searchResult = Vendor::where('main_category_id', $request->main_category_id)
@@ -33,18 +29,10 @@ class SearchController extends Controller
                     ->selectionForIndexing()->get();
 
             if ($searchResult->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.No results for ').$request->search_text.__('messages., Try a new Search')
-                ], 400);
+                return returnErrorJson(__('messages.No results for ') . $request->search_text . __('messages., Try a new Search'), 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.Search result...'),
-                'result' => $searchResult,
-            ]);
+            return returnDataJson('result', $searchResult, __('messages.Search result...'));
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
         }
@@ -58,11 +46,7 @@ class SearchController extends Controller
 
         try {
             if (!isset($request->search_text))
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.Nothing to search for...!')
-                ], 400);
+                return returnErrorJson(__('messages.Nothing to search for...!'), 400);
 
             if (user()->tokenCan('admin'))
                 $searchResult = Product::where('product_category_id', $request->product_category_id)
@@ -75,18 +59,9 @@ class SearchController extends Controller
                     ->selectionForIndexing()->get();
 
             if ($searchResult->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.No results for ').$request->search_text.__('messages., Try a new Search')
-                ], 400);
+                return returnErrorJson(__('messages.No results for ') . $request->search_text . __('messages., Try a new Search'), 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.Search result...'),
-                'result' => $searchResult,
-            ]);
+            return returnDataJson('result', $searchResult, __('messages.Search result...'));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -97,11 +72,7 @@ class SearchController extends Controller
     {
         try {
             if (!isset($request->search_text))
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.Nothing to search for...!')
-                ], 400);
+                return returnErrorJson(__('messages.Nothing to search for...!'), 400);
 
             if (user()->tokenCan('admin'))
                 $searchResult1 = Vendor::where('name', 'like', '%' . $request->search_text . '%')
@@ -119,24 +90,17 @@ class SearchController extends Controller
                     ->where('name', 'like', '%' . $request->search_text . '%')
                     ->selectionForIndexing()->get();
 
-            $searchResult = collect($searchResult1)->merge($searchResult2);
+            $searchResult = [
+                'vendors' => $searchResult1,
+                'products' => $searchResult2
+            ];
 
-            if ($searchResult->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.No results for ').$request->search_text.__('messages., Try a new Search')
-                ], 400);
+            if (empty($searchResult))
+                return returnErrorJson(__('messages.No results for ') . $request->search_text . __('messages., Try a new Search'), 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.Search result...'),
-                'result' => $searchResult,
-            ]);
+            return returnDataJson('result', $searchResult, __('messages.Search result...'));
 
         } catch (\Exception $exception) {
-            return $exception;
             return returnExceptionJson();
         }
     }

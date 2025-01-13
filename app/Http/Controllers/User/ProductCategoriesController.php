@@ -16,18 +16,9 @@ class ProductCategoriesController extends Controller
                 ->select('id', 'name', 'slug', 'photo')->get();
 
             if ($productCategories->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.product categories not found...!'),
-                ], 400);
+                return returnErrorJson(__('messages.product categories not found...!'), 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.all categories returned...'),
-                'productCategories' => $productCategories,
-            ]);
+            return returnDataJson('productCategories', $productCategories, __('messages.all categories returned...'),);
 
         } catch (\Exception $exception) {
             return returnExceptionJson();

@@ -99,8 +99,8 @@ class LoginController extends Controller
         $this->clearLoginAttempts($request);
 
         if (user()->verified !== 1) {
-
             user()->generateCode();
+
             return response()->json([
                 'status' => false,
                 'status code' => 401,

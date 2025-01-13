@@ -20,18 +20,9 @@ class VendorsController extends Controller
                 }])->get();
 
             if ($vendors->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.vendors not found...!'),
-                ], 400);
+                return returnErrorJson(__('messages.vendors not found...!'), 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.all vendors returned..'),
-                'vendors' => $vendors,
-            ]);
+            return returnDataJson('vendors', $vendors, __('messages.all vendors returned..'));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
@@ -45,20 +36,11 @@ class VendorsController extends Controller
                 ->selectionForShowing()->find($id);
 
             if (!isset($vendor))
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.the vendor not found...!'),
-                ], 400);
+                return returnErrorJson(__('messages.the vendor not found...!'), 400);
 
             $vendor->mainCategory = $vendor->mainCategory()->value('name');
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.the vendor returned successfully...'),
-                'vendor' => $vendor,
-            ]);
+            return returnDataJson('vendor', $vendor, __('messages.the vendor returned successfully...'));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();

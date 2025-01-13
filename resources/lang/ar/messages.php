@@ -19,6 +19,7 @@ return [
     'Order canceled successfully...' => 'تم إلغاء الطلب بنجاح',
     'product categories not found...!' => 'فئات المنتجات غير موجودة',
     'all categories returned...' => 'تم إرجاع جميع الفئات',
+    'the product returned successfully for ID: ' => 'تم ارجاع المنتج بنجاح من اجل ال ID: ',
     'products not found...!' => 'المنتجات غير موجودة',
     'all products returned..' => 'تم إرجاع جميع المنتجات',
     'the product not found...!' => 'المنتج غير موجود',
@@ -46,6 +47,14 @@ return [
     ', Try a new Search' => '، حاول بحثًا جديدًا',
     'Search result...' => 'نتيجة البحث',
     'The App Language switched...' => 'تم تغيير لغة التطبيق',
-    'The fcm token field is required.' => 'توكن ال FCM مطلوب'
+    'The fcm token field is required.' => 'توكن ال FCM مطلوب',
+    'The fcm token field must be string.' => 'توكن ال FCM يجب ان يكون نص',
+    'you have created new order' => 'لقد قمت بانشاء طلب جديد',
+    'New Order...' => 'طلب جديد ',
+    'Your Order have been updated' => 'لقد تم التعديل على طلبك',
+    'Order Updated...' => 'تم تعديل الطلب',
+    'your profile has been updated' => 'لقد تم التعديل على ملفك الشخصي',
+    'Your Profile updated...' => 'ملفك الشخصي عدل',
+    'pending' => 'معلق',
 ];
 

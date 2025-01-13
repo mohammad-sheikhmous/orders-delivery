@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "98163718066e7e04499f1c9e4f8a8557",
+    "content-hash": "f0c0c46ca421952c6d9e5babc44e94ff",
     "packages": [
         {
             "name": "beste/clock",
@@ -2168,12 +2168,12 @@
             "type": "library",
             "extra": {
                 "laravel": {
-                    "providers": [
-                        "Kreait\\Laravel\\Firebase\\ServiceProvider"
-                    ],
                     "aliases": {
                         "Firebase": "Kreait\\Laravel\\Firebase\\Facades\\Firebase"
-                    }
+                    },
+                    "providers": [
+                        "Kreait\\Laravel\\Firebase\\ServiceProvider"
+                    ]
                 }
             },
             "autoload": {

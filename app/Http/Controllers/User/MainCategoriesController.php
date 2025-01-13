@@ -17,18 +17,9 @@ class MainCategoriesController extends Controller
             $mainCategories = MainCategory::where('active', 1)->selection()->get();
 
             if ($mainCategories->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.main categories not found...!'),
-                ], 400);
+                return returnErrorJson(__('messages.main categories not found...!'), 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.all categories returned..'),
-                'categories' => $mainCategories,
-            ]);
+            return returnDataJson('mainCategories', $mainCategories, __('messages.all categories returned..'));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();

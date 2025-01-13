@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FcmToken;
+use http\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -20,25 +21,20 @@ class FcmTokensController extends Controller
             'fcm_tokens.string' => __('messages.The fcm token field must be string.')
         ]);
 
-        if ($validator->fails())
-            return response()->json([
-                'status' => false,
-                'status code' => 422,
-                'errors' => $validator->messages()
-            ], 422);
+        if ($validator->fails()) {
+            $messages = (string)collect($validator->customMessages)->first();
+            return returnErrorJson($messages, 422, 'errors');
+        }
 
         try {
             // Save or update the FCM token for the user
             FcmToken::updateOrCreate(
                 ['user_id' => user()->id, 'fcm_token' => $request->fcm_token],
-                ['fcm_token' => $request->fcm_token]
+                ['fcm_token' => $request->fcm_token, 'device' => $request->device, 'updated_at' => now()]
             );
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.FCM token saved successfully')
-            ]);
+            return returnSuccessJson(__('messages.FCM token saved successfully'));
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
         }

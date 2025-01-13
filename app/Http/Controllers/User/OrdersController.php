@@ -3,15 +3,24 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Http\Services\FcmService;
 use App\Models\Cart;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
+use App\Notifications\FcmNotification1;
+use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OrdersController extends Controller
 {
+    private $firebaseService;
+
+    public function __construct(FirebaseService $firebaseService)
+    {
+        $this->firebaseService = $firebaseService;
+    }
+
     public function index()
     {
         try {
@@ -20,18 +29,10 @@ class OrdersController extends Controller
                 ->get();
 
             if ($orders->isEmpty())
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.orders not found...!'),
-                ], 400);
+                return returnErrorJson(__('messages.orders not found...!'), 400);
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.All orders for the user...'),
-                'orders' => $orders
-            ]);
+            return returnDataJson('orders', $orders, __('messages.All orders for the user...'),);
+
         } catch (\Exception $exception) {
             return returnExceptionJson();
         }
@@ -43,11 +44,7 @@ class OrdersController extends Controller
             $cart = Cart::with('items.product')->where('user_id', auth()->id())->first();
 
             if (!$cart || $cart->items->isEmpty()) {
-                return response()->json([
-                    'status' => false,
-                    'status code' => 400,
-                    'message' => __('messages.Order cannot be created...!')
-                ], 400);
+                return returnErrorJson(__('messages.Order cannot be created...!'), 400);
             }
 
             $totalPrice = 0;
@@ -60,15 +57,8 @@ class OrdersController extends Controller
             $order = Order::create([
                 'user_id' => auth()->id(),
                 'total_price' => $totalPrice,
-                'status' => ['en'=>'pending','ar'=>'معلق'],
+                'status' => ['en' => 'pending', 'ar' => 'معلق'],
             ]);
-
-//            $fcmService = new FcmService();
-//            $fcmService->FCM(
-//                user()->fcmTokens,[
-//                'title'=>'New Order',
-//                'message'=>__('messages.new order created...'),
-//            ]);
 
             foreach ($cart->items as $item) {
                 $order->items()->create([
@@ -82,12 +72,12 @@ class OrdersController extends Controller
             $cart->items()->delete();
             DB::commit();
 
-            return response()->json([
-                'status' => true,
-                'status code' => 201,
-                'message' => __('messages.Order created'),
-                'order' => $order
-            ], 201);
+            $token = user()->fcmTokens()->latest('updated_at')->pluck('fcm_token')->first();
+
+            if ($token)
+                $this->firebaseService->sendNotification($token, __('messages.New Order...'), __('messages.you have created new order'));
+
+            return returnSuccessJson(__('messages.Order created'), 201);
 
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -102,15 +92,13 @@ class OrdersController extends Controller
             'items' => 'required|array',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-        ],$this->messages());
+        ], $this->messages());
 
         try {
-            $order = Order::where('id', $id)->where('user_id', auth()->id())->first();
+            $order = Order::where('id', $id)->where('user_id', user()->id)->first();
 
-            if (!$order || $order->status !== 'pending') {
-                return response()->json([
-                    'message' => __('messages.Order cannot be modified'),
-                ], 400);
+            if (!$order || $order->status !== __('messages.pending')) {
+                return returnErrorJson(__('messages.Order cannot be modified'), 400);
             }
 
             DB::beginTransaction();
@@ -119,21 +107,20 @@ class OrdersController extends Controller
             }
 
             $totalPrice = 0;
+            $order->items()->delete();
 
             foreach ($request->items as $item) {
-                $orderItem = $order->items()->where('product_id', $item['product_id'])->first();
+                //$orderItem = $order->items()->where('product_id', $item['product_id'])->first();
 
-                $product = $orderItem->product;
+                $product = Product::where('id', $item['product_id'])->first();
 
-                if ($product->amount < $item['quantity']) {
-                    return response()->json([
-                        'message' => __('messages.Not enough amount for product:').' '.$product->name,
-                    ], 400);
-                }
+                if ($product->amount < $item['quantity'])
+                    return returnErrorJson(__('messages.Not enough amount for product:') . ' ' . $product->name, 400);
 
                 $product->decrement('amount', $item['quantity']);
 
-                $orderItem->update([
+                $order->items()->create([
+                    'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'price' => $product->price,
                 ]);
@@ -144,12 +131,12 @@ class OrdersController extends Controller
             $order->update(['total_price' => $totalPrice]);
             DB::commit();
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.Order modified'),
-                'order' => $order->fresh()
-            ]);
+            $token = user()->fcmTokens()->latest('updated_at')->pluck('fcm_token')->first();
+
+            if (!$token)
+                $this->firebaseService->sendNotification($token, __('messages.Order Updated...'), __('messages.Your Order have been updated'));
+
+            return returnSuccessJson(__('messages.Order modified'));
 
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -161,26 +148,18 @@ class OrdersController extends Controller
     public function destroy($id)
     {
         try {
-            $order = Order::where('id', $id)->where('user_id', auth()->id())->first();
+            $order = Order::with('items')->where('id', $id)->where('user_id', auth()->id())->first();
 
-            if (!$order || $order->status !== 'pending') {
-                return response()->json([
-                    'message' => __('messages.Order cannot be canceled')
-                ], 400);
-            }
+            if (!$order || $order->status !== __('messages.pending'))
+                return returnErrorJson(__('messages.Order cannot be canceled'), 400);
 
             foreach ($order->items as $item) {
                 $item->product->increment('amount', $item->quantity);
             }
 
-            $order->items()->delete();
             $order->delete();
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.Order canceled successfully...')
-            ]);
+            return returnSuccessJson(__('messages.Order canceled successfully...'));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();

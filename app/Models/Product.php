@@ -46,7 +46,7 @@ class Product extends Model
 
     public function scopeSelectionForIndexing($query)
     {
-        return $query->select('id', 'name', 'photo', 'product_category_id');
+        return $query->select('id', 'name', 'description', 'photo', 'product_category_id');
     }
 
     public function getActiveAttribute($val)

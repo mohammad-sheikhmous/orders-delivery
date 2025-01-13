@@ -27,12 +27,9 @@ class RegisterController extends Controller
             ]);
 
             DB::commit();
-            return response()->json([
-                'status' => true,
-                'status code' => 201,
-                'message' => 'the user created successfully but the number must be confirmed in order to become authenticated',
-                'code' => $user->code
-            ], 201);
+            return returnDataJson('code', $user->code,
+                'the user created successfully but the number must be confirmed in order to become authenticated', 201);
+
         } catch (Exception $exception) {
             DB::rollBack();
 

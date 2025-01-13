@@ -4,15 +4,19 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProfileRequest;
-use App\Http\Services\FcmService;
-use App\Models\User;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\Request;
+use App\Services\FirebaseService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
+    private $firebaseService;
+
+    public function __construct(FirebaseService $firebaseService)
+    {
+        $this->firebaseService = $firebaseService;
+    }
+
     public function show()
     {
         try {
@@ -55,30 +59,22 @@ class ProfileController extends Controller
             }
 
             $updated = user()->profile()->update($request->except('_method', 'image'));
-dd(\user()->profile());
+
             if ($updated) {
 
                 $profile = $profile->fresh();
 
                 $message = __('messages.Profile information updated successfully...');
 
-//                $fcmService = new FcmService();
-//                $fcmService->FCM(
-//                    user()->fcmTokens, [
-//                    'title' => 'Profile updated',
-//                    'message' => __('messages.Your profile has been modified.'),
-//                ]);
+
+                $token = user()->fcmTokens()->latest('updated_at')->pluck('fcm_token')->first();
+
+                if (!$token)
+                    $this->firebaseService->sendNotification($token, __('messages.Your Profile updated...'), __('messages.your profile has been updated'));
             }
             DB::commit();
 
-            $profile->mobile = user()->mobile;
-
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => (isset($message)) ? $message : __('messages.No modifications have been made...'),
-                'profile' => $profile,
-            ]);
+            return returnSuccessJson((isset($message)) ? $message : __('messages.No modifications have been made...'));
 
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -97,11 +93,7 @@ dd(\user()->profile());
 
             user()->delete();
 
-            return response()->json([
-                'status' => true,
-                'status code' => 200,
-                'message' => __('messages.The Account deleted with user logged out...'),
-            ]);
+            return returnSuccessJson(__('messages.The Account deleted with user logged out...'));
 
         } catch (\Exception $exception) {
             return returnExceptionJson();
