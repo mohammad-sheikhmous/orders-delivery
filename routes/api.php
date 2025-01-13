@@ -11,5 +11,3 @@ require base_path('routes/user-api.php');
 
 Route::get('/images/{name}', ShowImagesController::class)->where('name', '.*');
 
-
-
