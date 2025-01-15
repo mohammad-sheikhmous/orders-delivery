@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Notifications\FcmNotification1;
+use App\Notifications\UsersNotification;
 use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -74,9 +75,11 @@ class OrdersController extends Controller
 
             $token = user()->fcmTokens()->latest('updated_at')->pluck('fcm_token')->first();
 
-            if ($token)
+            if ($token) {
                 $this->firebaseService->sendNotification($token, __('messages.New Order...'), __('messages.you have created new order'));
 
+                user()->notify(new UsersNotification(__('messages.New Order...'), __('messages.you have created new order')));
+            }
             return returnSuccessJson(__('messages.Order created'), 201);
 
         } catch (\Exception $exception) {
@@ -133,8 +136,11 @@ class OrdersController extends Controller
 
             $token = user()->fcmTokens()->latest('updated_at')->pluck('fcm_token')->first();
 
-            if (!$token)
+            if ($token) {
                 $this->firebaseService->sendNotification($token, __('messages.Order Updated...'), __('messages.Your Order have been updated'));
+
+                user()->notify(new UsersNotification(__('messages.Order Updated...'), __('messages.Your Order have been updated')));
+            }
 
             return returnSuccessJson(__('messages.Order modified'));
 

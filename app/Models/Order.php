@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Notifications\UsersNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Translatable\HasTranslations;
 
 class Order extends Model
@@ -40,10 +42,22 @@ class Order extends Model
 
         $prunables1 = $prunables->get();
         if (!$prunables1->isEmpty())
-            foreach ($prunables1 as $prunable)
+            foreach ($prunables1 as $prunable) {
                 foreach ($prunable->items as $item) {
                     $item->product->increment('amount', $item->quantity);
                 }
+
+//                $user = User::where('id', $prunable->user_id)->get();
+//                $token = $user->fcmTokens()->latest('updated_at')->pluck('fcm_token')->first();
+//
+//                if ($token) {
+//                    $this->firebaseService->sendNotification($token, __('messages.Order Updated...'),
+//                        __('messages.Your Order have been updated'));
+//
+//                    $user->notify(new UsersNotification(__('messages.Order deleted...'),
+//                        __('messages.The order was deleted because it exceeded the waiting period.')));
+//                }
+            }
 
         return $prunables;
     }

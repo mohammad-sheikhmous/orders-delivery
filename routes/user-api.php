@@ -114,6 +114,8 @@ Route::prefix('user')->group(function () {
         Route::get('switch_lang', \App\Http\Controllers\SwitchLangController::class);
 
         Route::post('fcm_tokens', \App\Http\Controllers\FcmTokensController::class);
+
+        Route::get('notifications', [\App\Http\Controllers\User\NotificationsController::class, 'index']);
     });
 });
 

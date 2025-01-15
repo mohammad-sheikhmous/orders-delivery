@@ -55,5 +55,9 @@ return [
     'Order Updated...' => 'Order Updated...',
     'your profile has been updated' => 'your profile has been updated',
     'Your Profile updated...' => 'Your Profile updated...',
+    'Not Found Notifications...!' => 'Not Found Notifications...!',
+    'All Notifications' => 'All Notifications',
+    'Order deleted...' => 'Order deleted...',
+    'The order was deleted because it exceeded the waiting period.' => 'The order was deleted because it exceeded the waiting period.',
     'pending' => 'pending',
 ];

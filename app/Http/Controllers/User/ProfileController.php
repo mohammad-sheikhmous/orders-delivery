@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProfileRequest;
+use App\Notifications\UsersNotification;
 use App\Services\FirebaseService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -22,7 +23,6 @@ class ProfileController extends Controller
         try {
             $profile = user()->profile;
             $profile->mobile = user()->mobile;
-//                User::where('id', user()->id)->selection()->get();
 
             return response()->json([
                 'status' => true,
@@ -69,8 +69,11 @@ class ProfileController extends Controller
 
                 $token = user()->fcmTokens()->latest('updated_at')->pluck('fcm_token')->first();
 
-                if (!$token)
+                if ($token) {
                     $this->firebaseService->sendNotification($token, __('messages.Your Profile updated...'), __('messages.your profile has been updated'));
+
+                    user()->notify(new UsersNotification(__('messages.Your Profile updated...'), __('messages.your profile has been updated')));
+                }
             }
             DB::commit();
 

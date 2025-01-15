@@ -55,6 +55,10 @@ return [
     'Order Updated...' => 'تم تعديل الطلب',
     'your profile has been updated' => 'لقد تم التعديل على ملفك الشخصي',
     'Your Profile updated...' => 'ملفك الشخصي عدل',
+    'Not Found Notifications...!' => 'لا يوجد اشعارات',
+    'All Notifications' => 'جميع الاشعارات',
+    'Order deleted...' => 'طلب حذف',
+    'The order was deleted because it exceeded the waiting period.' => 'الطلب حذف لانه تجاوز فترة الانتظار',
     'pending' => 'معلق',
 ];
 
