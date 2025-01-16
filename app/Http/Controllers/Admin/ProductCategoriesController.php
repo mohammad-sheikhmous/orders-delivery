@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductCategoryRequest;
 use App\Models\ProductCategory;
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -19,16 +20,29 @@ class ProductCategoriesController extends Controller
                 }])->get();
 
             if ($productCategories->isEmpty())
-                return returnErrorJson('Product Categories not found...!', 400);
+                return to_route('admin.dashboard')->with(['error' => 'Product Categories not found...!']);
 
-            return returnDataJson('categories', $productCategories, 'all product categories returned..');
+//                return returnErrorJson('Product Categories not found...!', 400);
+
+            return view('admin.productCategories.index', ['productCategories' => $productCategories]);
+
+//            return returnDataJson('categories', $productCategories, 'all product categories returned..');
 
         } catch (\Exception $exception) {
-            return returnExceptionJson();
+            return to_route('admin.dashboard')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return returnExceptionJson();
         }
     }
 
-    public function create(ProductCategoryRequest $request)
+    public function create()
+    {
+        $vendors = Vendor::selectionForIndexing()->get();
+
+        return view('admin.productCategories.create', ['vendors' => $vendors]);
+    }
+
+    public function store(ProductCategoryRequest $request)
     {
         try {
             $photoPath = saveImages('product_categories', $request->photo);
@@ -44,12 +58,34 @@ class ProductCategoriesController extends Controller
                 'vendor_id' => $request->vendor_id
             ]);
 
-            return returnSuccessJson('New Product Category created successfully...', 201);
+            return to_route('admin.product_categories.index')->with(['success' => 'New Product Category created successfully...']);
+
+//            return returnSuccessJson('New Product Category created successfully...', 201);
 
         } catch (\Exception $exception) {
-            return returnExceptionJson();
+            return to_route('admin.dashboard')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return returnExceptionJson();
         }
     }
+
+    public function edit($id)
+    {
+        try {
+            $productCategory = ProductCategory::find($id);
+            if (!$productCategory)
+                return to_route('admin.product_categories.index')->with(['error' => 'القسم غير موجود ليتم التعديل عليه ']);
+
+//            dd($vendor);
+            $vendors = Vendor::where('active', 1)->selectionForIndexing()->get();
+
+            return view('admin.productCategories.edit', ['productCategory' => $productCategory, 'vendors' => $vendors]);
+
+        } catch (\Exception $exception) {
+            return to_route('admin.product_categories.index')->with(['error' => __('messages.something went wrong...!')]);
+        }
+    }
+
 
     public function update(ProductCategoryRequest $request, $id)
     {
@@ -57,7 +93,9 @@ class ProductCategoriesController extends Controller
             $productCategory = ProductCategory::find($id);
 
             if (!$productCategory)
-                return returnErrorJson('Product Category not found...', 400);
+                return to_route('admin.productCategories.index')->with(['error' => 'Product Category not found...']);
+
+//                return returnErrorJson('Product Category not found...', 400);
 
             if ($request->photo) {
                 if (isset($productCategory->photo))
@@ -82,10 +120,14 @@ class ProductCategoriesController extends Controller
             $message = ($updated) ? 'The MainCategory updated successfully...'
                 : 'No modifications have been made...';
 
-            return returnSuccessJson($message);
+            return to_route('admin.product_categories.index')->with(['success' => $message]);
+
+//            return returnSuccessJson($message);
 
         } catch (\Exception $exception) {
-            return returnExceptionJson();
+            return to_route('admin.productCategories.index')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return returnExceptionJson();
         }
     }
 
@@ -94,20 +136,28 @@ class ProductCategoriesController extends Controller
         try {
             $productCategory = ProductCategory::find($id);
             if (!$productCategory)
-                return returnErrorJson('Product Category not found...', 400);
+                return to_route('admin.productCategories.index')->with(['error' => 'Product Category not found...']);
+
+//            return returnErrorJson('Product Category not found...', 400);
 
             $product = $productCategory->products();
             if (isset($product) && $product->count() > 0)
-                return returnErrorJson('The Product Category cannot be deleted...', 400);
+                return to_route('admin.product_categories.index')->with(['error' => 'The Product Category cannot be deleted...']);
+
+//                return returnErrorJson('The Product Category cannot be deleted...', 400);
 
             $photoPath = $productCategory->photo;
             Storage::disk('images')->delete($photoPath);
             $productCategory->delete();
 
-            return returnSuccessJson('The Product Category deleted successfully...');
+            return to_route('admin.product_categories.index')->with(['success' => 'The Product Category deleted successfully...']);
+
+//            return returnSuccessJson('The Product Category deleted successfully...');
 
         } catch (\Exception $exception) {
-            return returnExceptionJson();
+            return to_route('admin.product_categories.index')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return returnExceptionJson();
         }
     }
 
@@ -117,16 +167,22 @@ class ProductCategoriesController extends Controller
             $productCategory = ProductCategory::find($id);
 
             if (!$productCategory)
-                return returnErrorJson('The Product Category not found...!', 400);
+                return to_route('admin.product_categories.index')->with(['error' => 'The Product Category not found...!']);
+
+//            return returnErrorJson('The Product Category not found...!', 400);
 
             $status = $productCategory->active == 'active' ? 'inactive' : 'active';
 
             $productCategory->update(['active' => $status]);
 
-            return returnSuccessJson('The Product Category status changed successfully...');
+            return to_route('admin.product_categories.index')->with(['success' => 'The Product Category status changed successfully...']);
+
+//            return returnSuccessJson('The Product Category status changed successfully...');
 
         } catch (\Exception $ex) {
-            return returnExceptionJson();
+            return to_route('admin.product_categories.index')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return returnExceptionJson();
         }
     }
 }

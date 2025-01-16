@@ -10,7 +10,7 @@ class MainCategory extends Model
     use HasTranslations;
 
     protected $fillable = [
-        'id','name', 'slug', 'photo', 'active'
+        'id', 'name', 'slug', 'photo', 'active'
     ];
 
     public $translatable = ['name'];
@@ -39,11 +39,11 @@ class MainCategory extends Model
 
     public function scopeSelection($query)
     {
-        return $query->select('id','name', 'slug', 'photo', 'active');
+        return $query->select('id', 'name', 'slug', 'photo', 'active');
     }
 
     public function vendors()
     {
-        return $this->hasMany(Vendor::class,'main_category_id');
+        return $this->hasMany(Vendor::class, 'main_category_id');
     }
 }

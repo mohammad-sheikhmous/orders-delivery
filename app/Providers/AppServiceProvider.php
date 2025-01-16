@@ -26,10 +26,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-//        $this->configureUrl();
-//        $this->configureVite();
+        $this->configureUrl();
+        $this->configureVite();
 //        $this->configureModels();
-//        $this->configureCommands();
+        $this->configureCommands();
 
         RateLimiter::for('auth', function (Request $request) {
             return [

@@ -32,6 +32,11 @@ class VendorRequest extends FormRequest
         );
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge(['active' => ($this->active == 1) ? 'active' : 'inactive']);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -40,11 +45,11 @@ class VendorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            'photo' => 'required_without:id|image|mimes:jpeg,png,jpg,gif,svg',
             'name_en' => 'required|string|max:50',
             'name_ar' => 'required|string|max:50',
             'mobile' => 'required|digits:10|starts_with:09|unique:vendors,mobile,' . $this->vendor,
-            'address' => 'string|max:300',
+            'address' => 'nullable|string|max:300',
 //            'email'=>'sometimes|nullable|email',
             'email' => 'email|unique:vendors,email,' . $this->id,
             'password' => ['required', 'string', 'confirmed', 'min:8', new StrongPasswordRule()],

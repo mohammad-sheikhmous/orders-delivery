@@ -31,6 +31,11 @@ class ProductCategoryRequest extends FormRequest
         );
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge(['active' => ($this->active == 1) ? 'active' : 'inactive']);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -41,7 +46,7 @@ class ProductCategoryRequest extends FormRequest
         return [
             'name_en' => 'required|string|max:50',
             'name_ar' => 'required|string|max:50',
-            'photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            'photo' => 'required_without:id|image|mimes:jpeg,png,jpg,gif,svg',
             'slug' => 'string|50',
             'active' => 'required|in:active,inactive',
             'vendor_id' => 'required|exists:vendors,id'

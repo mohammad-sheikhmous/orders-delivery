@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use Google\Service\BigtableAdmin\DataBoostIsolationReadOnly;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,18 +16,24 @@ class ProductsController extends Controller
     public function index()
     {
         try {
-            $products = Product::selectionForIndexing()
+            $products = Product::selectionForShowing()
                 ->with(['productCategory' => function ($q) {
                     $q->select('id', 'name');
                 }])->get();
 
             if ($products->isEmpty())
-                return returnErrorJson('products not found...!', 400);
+                return to_route('admin.dashboard')->with(['error' => 'products not found...!']);
 
-            return returnDataJson('products', $products, 'all products returned..');
+//            return returnErrorJson('products not found...!', 400);
+
+            return view('admin.products.index', ['products' => $products]);
+
+//            return returnDataJson('products', $products, 'all products returned..');
 
         } catch (\Exception $exception) {
-            return returnExceptionJson();
+            return to_route('admin.dashboard')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return returnExceptionJson();
         }
     }
 
@@ -45,23 +52,57 @@ class ProductsController extends Controller
         }
     }
 
-    public function create(ProductRequest $request)
+    public function create()
+    {
+        $productCategories = ProductCategory::selection()->get();
+
+        return view('admin.products.create', ['productCategories' => $productCategories]);
+    }
+
+    public function store(ProductRequest $request)
     {
         try {
             $photoPath = saveImages('products', $request->photo);
 
-            $request->merge([
-                'name' => ['en' => $request['name_en'], 'ar' => $request['name_ar']],
-                'description' => ['en' => $request['description_en'], 'ar' => $request['description_ar']],
-                'photo' => $photoPath,
-            ]);
+            $request = $request->toArray();
 
-            Product::create($request->except('name_ar', 'name_en', 'description_ar', 'description_en'));
+            $request['name'] = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
+            $request['description'] = ['en' => $request['description_en'], 'ar' => $request['description_ar']];
+            $request['photo'] = $photoPath;
 
-            return returnSuccessJson('New Product created successfully...', 201);
+//            $request->merge([
+//                'name' => ['en' => $request['name_en'], 'ar' => $request['name_ar']],
+//                'description' => ['en' => $request['description_en'], 'ar' => $request['description_ar']],
+//                'photo' => $photoPath,
+//            ]);
+
+            Product::create($request);
+
+            return to_route('admin.products.index')->with(['success' => 'New Product created successfully...']);
+
+//            return returnSuccessJson('New Product created successfully...', 201);
 
         } catch (\Exception $exception) {
-            return returnExceptionJson();
+            return to_route('admin.products.index')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return returnExceptionJson();
+        }
+    }
+
+    public function edit($id)
+    {
+        try {
+            $product = Product::find($id);
+            if (!$product)
+                return to_route('admin.products.index')->with(['error' => 'المنتج غير موجود ليتم التعديل عليه ']);
+
+//            dd($vendor);
+            $productCategories = ProductCategory::where('active', 1)->selection()->get();
+
+            return view('admin.products.edit', ['product' => $product, 'productCategories' => $productCategories]);
+
+        } catch (\Exception $exception) {
+            return to_route('admin.products.index')->with(['error' => __('messages.something went wrong...!')]);
         }
     }
 
@@ -71,9 +112,12 @@ class ProductsController extends Controller
             $product = Product::find($id);
 
             if (!$product)
-                return returnErrorJson('Product not found...', 400);
+                return to_route('admin.products.index')->with(['error' => 'المنتج غير موجود ليتم التعديل عليه ']);
+
+//            return returnErrorJson('Product not found...', 400);
 
             if ($request->photo) {
+                dd($request->photo);
                 Storage::disk('images')->delete($product->photo);
 
                 $photoPath = saveImages('products', $request->photo);
@@ -82,6 +126,8 @@ class ProductsController extends Controller
             }
 
             $name = ['en' => $request['name_en'], 'ar' => $request['name_ar']];
+            if ($request->description_ar)
+                $description = ['en' => $request['description_en'], 'ar' => $request['description_ar']];
             $request = $request->except('_method', 'name_ar', 'name_en');
             $request['photo'] = $photoPath;
             $request['name'] = $name;
@@ -91,11 +137,15 @@ class ProductsController extends Controller
             $message = ($updated) ? 'The Product updated successfully...'
                 : 'No modifications have been made...';
 
-            return returnSuccessJson($message);
+            return to_route('admin.products.index')->with(['success' => $message]);
+
+//            return returnSuccessJson($message);
 
         } catch (\Exception $exception) {
-            return $exception;
-            return returnExceptionJson();
+            return to_route('admin.products.index')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return $exception;
+//            return returnExceptionJson();
         }
     }
 
@@ -105,7 +155,9 @@ class ProductsController extends Controller
             $product = Product::find($id);
 
             if (!$product)
-                return returnErrorJson('The Product not found...', 400);
+                return to_route('admin.products.index')->with(['error' => 'المنتج غير موجود ليتم حذفه']);
+
+//            return returnErrorJson('The Product not found...', 400);
 
 //            $products = $vendor->products();
 //            if (isset($products) && $products->count() > 0)
@@ -119,10 +171,14 @@ class ProductsController extends Controller
             Storage::disk('images')->delete($photoPath);
             $product->delete();
 
-            return returnSuccessJson('The Product deleted successfully...');
+            return to_route('admin.products.index')->with(['success' => 'The Product deleted successfully...']);
+
+//            return returnSuccessJson('The Product deleted successfully...');
 
         } catch (\Exception $exception) {
-            return returnExceptionJson();
+            return to_route('admin.products.index')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return returnExceptionJson();
         }
     }
 
@@ -132,16 +188,22 @@ class ProductsController extends Controller
             $product = Product::find($id);
 
             if (!$product)
-                return returnErrorJson('The Product not found...!', 400);
+                return to_route('admin.products.index')->with(['error' => 'The Product not found...!']);
+
+//            return returnErrorJson('The Product not found...!', 400);
 
             $status = $product->active == 'active' ? 'inactive' : 'active';
 
             $product->update(['active' => $status]);
 
-            return returnSuccessJson('The Product status changed successfully...');
+            return to_route('admin.products.index')->with(['success' => 'The Product status changed successfully...']);
+
+//            return returnSuccessJson('The Product status changed successfully...');
 
         } catch (\Exception $ex) {
-            return returnExceptionJson();
+            return to_route('admin.products.index')->with(['error' => __('messages.something went wrong...!')]);
+
+//            return returnExceptionJson();
         }
     }
 }

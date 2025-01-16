@@ -17,16 +17,26 @@ class MainCategoriesController extends Controller
             $categories = MainCategory::selection()->get();
 
             if ($categories->isEmpty())
-                return returnErrorJson('Categories not found...!', 400);
+                return to_route('admin.main_categories.index')->with(['error' =>'Categories not found...!']);
+//                return returnErrorJson('Categories not found...!', 400);
 
+            return view('admin.mainCategories.index', ['main_categories' => $categories]);
             return returnDataJson('categories', $categories, 'all categories returned..');
 
         } catch (\Exception $exception) {
+            return to_route('admin.main_categories.index')->with(['error' => __('messages.something went wrong...!')]);
+
             return returnExceptionJson();
         }
     }
 
-    public function create(MainCategoryRequest $request)
+
+    public function create()
+    {
+        return view('admin.mainCategories.create');
+    }
+
+    public function store(MainCategoryRequest $request)
     {
         try {
             $photoPath = saveImages('categories', $request->photo);
@@ -40,12 +50,32 @@ class MainCategoriesController extends Controller
                 'photo' => $photoPath,
                 'active' => $request->active,
             ]);
-
+            return to_route('admin.main_categories.index')->with(['success' => 'New MainCategory created successfully...']);
             return returnSuccessJson('New MainCategory created successfully...', 201);
 
         } catch (\Exception $exception) {
+            return to_route('admin.main_categories.index')->with(['error' => __('messages.something went wrong...!')]);
+
             return returnExceptionJson();
         }
+    }
+
+
+    public function edit($id)
+    {
+        try {
+            $mainCategory = MainCategory::selection()->find($id);
+
+            if (!$mainCategory) {
+                return to_route('admin.main_categories.index')->with(['error' => 'لم يتم العثور على هذا القسم لتعديله...!']);
+            }
+
+            return view('admin.mainCategories.edit', ['mainCategory' => $mainCategory]);
+
+        } catch (\Exception $exception) {
+            return to_route('admin.main_categories.index')->with(['error' => __('messages.something went wrong...!')]);
+        }
+
     }
 
     public function update(MainCategoryRequest $request, $id)
@@ -78,9 +108,12 @@ class MainCategoriesController extends Controller
             $message = ($updated) ? 'The MainCategory updated successfully...'
                 : 'No modifications have been made...';
 
+            return to_route('admin.main_categories.index')->with(['success' => $message]);
             return returnSuccessJson($message);
 
         } catch (\Exception $exception) {
+            return to_route('admin.main_categories.index')->with(['error' => __('messages.something went wrong...!')]);
+
             return returnExceptionJson();
         }
     }
@@ -100,9 +133,12 @@ class MainCategoriesController extends Controller
             Storage::disk('images')->delete($photoPath);
             $category->delete();
 
+            return to_route('admin.main_categories.index')->with(['success' => 'لقد تم حذف الملف بنجاح...']);
             return returnSuccessJson('The MainCategory deleted successfully...', 400);
 
         } catch (\Exception $exception) {
+            return to_route('admin.main_categories.index')->with(['error' => __('messages.something went wrong...!')]);
+
             return returnExceptionJson();
         }
     }
@@ -122,6 +158,7 @@ class MainCategoriesController extends Controller
             return returnSuccessJson('The Main Category status changed successfully...');
 
         } catch (\Exception $ex) {
+            return to_route('admin.main_categories.index')->with(['error' => __('messages.something went wrong...!')]);
             return returnExceptionJson();
         }
     }

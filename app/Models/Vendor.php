@@ -35,7 +35,7 @@ class Vendor extends Model
 
     public function scopeSelectionForIndexing($query)
     {
-        return $query->select('id', 'name', 'photo', 'main_category_id');
+        return $query->select('id', 'name', 'photo', 'main_category_id','active');
     }
 
     public function mainCategory()
